@@ -114,7 +114,7 @@ const SCHEMA_CONFIG = {
       {
         'Type of Contribution': 'Journal Publication',
         'Title / Project Name': 'Seismic fragility curves for reinforced concrete frames with masonry infill walls',
-        'Authors / Investigators': 'Ramesh Chandra, Joseph Kurian, et al.',
+        'Authors / Investigators': 'Dr. John Doe, Dr. Jane Smith, et al.',
         'Year': 2025,
         'Journal / Funding Agency': 'Journal of Structural Engineering (ASCE)',
         'Indexing Database': 'Scopus',
@@ -124,7 +124,7 @@ const SCHEMA_CONFIG = {
       {
         'Type of Contribution': 'Sponsored Research Project',
         'Title / Project Name': 'Development of low-carbon alkali-activated geopolymer concrete utilizing industrial slag',
-        'Authors / Investigators': 'Dr. Joseph Kurian (PI), Dr. Priya V. Nair (Co-PI)',
+        'Authors / Investigators': 'Dr. Robert Taylor (PI), Dr. Jane Smith (Co-PI)',
         'Year': 2024,
         'Journal / Funding Agency': 'Department of Science and Technology (DST-SERB)',
         'Indexing Database': 'Peer Reviewed / Other',
@@ -155,7 +155,7 @@ const SCHEMA_CONFIG = {
       {
         'Event Title': 'AICTE-ATAL 5-Day Faculty Development Program on Earthquake Engineering & Disaster Resilience',
         'Event Category': 'Faculty Development Program (FDP)',
-        'Faculty Coordinator': 'Dr. Ramesh Chandra',
+        'Faculty Coordinator': 'Dr. John Doe',
         'Start Date (YYYY-MM-DD)': '2024-11-18',
         'End Date (YYYY-MM-DD)': '2024-11-22',
         'Number of Participants': 55,

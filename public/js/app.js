@@ -176,13 +176,7 @@ const CONFIG = {
 
 const state = {
   activeTab: 'hierarchy',
-  currentUser: {
-    name: 'Dr. John Doe',
-    email: 'john.doe@university.edu',
-    role: 'iqac',
-    title: 'HoD & Department IQAC Coordinator',
-    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=JohnDoe&backgroundColor=c29b38'
-  },
+  currentUser: null,
   theme: 'light',
   searchQuery: '',
   statusFilter: 'ALL',
@@ -220,9 +214,9 @@ const state = {
 async function api(path, opts = {}) {
   const headers = {
     'Content-Type': 'application/json',
-    'x-user-role': state.currentUser.role,
-    'x-user-name': state.currentUser.name,
-    'x-user-email': state.currentUser.email,
+    'x-user-role': state.currentUser ? state.currentUser.role : 'guest',
+    'x-user-name': state.currentUser ? state.currentUser.name : 'Guest User',
+    'x-user-email': state.currentUser ? state.currentUser.email : 'guest@verita.edu',
     ...(opts.headers || {})
   };
 
@@ -275,7 +269,18 @@ async function loadAllData() {
     // Restore session user if present
     const savedUser = localStorage.getItem('verita_user_session');
     if (savedUser) {
-      try { state.currentUser = JSON.parse(savedUser); } catch (_) {}
+      try {
+        const parsed = JSON.parse(savedUser);
+        if (parsed && parsed.email && parsed.role) {
+          state.currentUser = parsed;
+        } else {
+          state.currentUser = null;
+        }
+      } catch (_) {
+        state.currentUser = null;
+      }
+    } else {
+      state.currentUser = null;
     }
 
     const [health, inst, hier, profile, faculty, students, infra, research, events, programs, tasks, audit, accBreakdown] = await Promise.all([
@@ -366,6 +371,13 @@ function toggleSidebar() {
 // ============================================================================
 // Left Sidebar Panel
 // ============================================================================
+function logoutUser() {
+  state.currentUser = null;
+  localStorage.removeItem('verita_user_session');
+  showToast('You have signed out. Please sign in with your role account to access Drive & Sheets.', 'info');
+  render();
+}
+
 function renderSidebar() {
   const u = state.currentUser;
   const inst = state.institution || {};
@@ -383,25 +395,41 @@ function renderSidebar() {
       </div>
     </div>
 
-    <!-- Authenticated Google Identity Card -->
-    <div class="sidebar-user-card">
-      <div class="user-profile-row">
-        <img src="${esc(u.avatar)}" alt="${esc(u.name)}" class="user-avatar-img" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=User'">
-        <div class="user-text-info">
-          <div class="user-name" title="${esc(u.name)}">${esc(u.name)}</div>
-          <div class="user-email" title="${esc(u.email)}">${esc(u.email)}</div>
-          <span class="user-role-badge">${esc(u.title || u.role)}</span>
+    <!-- Authenticated or Unauthenticated Google Identity Card -->
+    ${!u ? `
+      <div class="sidebar-user-card" style="text-align: center; padding: 14px 10px;">
+        <div style="font-size: 1.5rem; margin-bottom: 4px;">🔐</div>
+        <div style="font-weight: 700; font-size: 0.88rem; color: var(--ink);">Not Signed In</div>
+        <div style="font-size: 0.74rem; color: var(--ink-soft); margin-bottom: 10px; line-height: 1.35;">
+          Sign in to access or create your department Drive folder & live Sheets
+        </div>
+        <button class="btn primary" style="width: 100%; padding: 7px 10px; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 6px;" onclick="openAuthModal()">
+          <span>🔐 Sign In with Google</span>
+        </button>
+      </div>
+    ` : `
+      <div class="sidebar-user-card">
+        <div class="user-profile-row">
+          <img src="${esc(u.avatar || 'https://api.dicebear.com/7.x/initials/svg?seed=' + u.name)}" alt="${esc(u.name)}" class="user-avatar-img" onerror="this.src='https://api.dicebear.com/7.x/initials/svg?seed=User'">
+          <div class="user-text-info">
+            <div class="user-name" title="${esc(u.name)}">${esc(u.name)}</div>
+            <div class="user-email" title="${esc(u.email)}">${esc(u.email)}</div>
+            <span class="user-role-badge">${esc(u.title || u.role)}</span>
+          </div>
+        </div>
+        <div style="display: flex; gap: 6px; margin-top: 8px;">
+          <button class="user-auth-action-btn" style="flex: 1;" onclick="openEditInstitutionModal()" title="Edit University, School, Department and HoD names">
+            <span>⚙️ Setup</span>
+          </button>
+          <button class="user-auth-action-btn" style="flex: 1.2;" onclick="openAuthModal()" title="Switch Account or Role">
+            <span>🔐 Switch Role</span>
+          </button>
+          <button class="user-auth-action-btn" style="flex: 0.8; color: #B93826;" onclick="logoutUser()" title="Sign Out">
+            <span>🚪 Exit</span>
+          </button>
         </div>
       </div>
-      <div style="display: flex; gap: 6px; margin-top: 8px;">
-        <button class="user-auth-action-btn" style="flex: 1;" onclick="openEditInstitutionModal()" title="Edit University, School, Department and HoD names">
-          <span>⚙️ Setup</span>
-        </button>
-        <button class="user-auth-action-btn" style="flex: 1.2;" onclick="openAuthModal()" title="Sign in with your Google Account">
-          <span>🔐 Login/Roles</span>
-        </button>
-      </div>
-    </div>
+    `}
 
     <!-- Navigation Categories -->
     <div class="sidebar-nav-container">
@@ -428,7 +456,7 @@ function renderSidebar() {
     <div class="sidebar-footer">
       <div class="drive-status-indicator" title="Connected to Google Cloud & Google Drive Storage">
         <span class="drive-status-dot"></span>
-        <span>Google Drive: Active</span>
+        <span>Google Drive: ${u ? 'Active' : 'Login Required'}</span>
       </div>
       <button id="themeToggle" class="theme-toggle-btn" title="Toggle Theme" style="padding: 3px 8px; font-size: 0.75rem;">
         ${state.theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
@@ -463,7 +491,11 @@ function renderHierarchyBanner() {
         <span style="opacity: 0.85; font-size: 0.74rem;">(AY ${esc(inst.academic_year)})</span>
       </div>
       <div style="display: flex; gap: 8px;">
-        <button class="hierarchy-edit-btn" onclick="openEditInstitutionModal()" title="Edit University & Department details">⚙️ Edit Details</button>
+        ${!state.currentUser ? `
+          <button class="hierarchy-edit-btn" style="background: var(--christ-gold); color: #0E355F; font-weight: 700;" onclick="openAuthModal()">🔐 Sign In First</button>
+        ` : `
+          <button class="hierarchy-edit-btn" onclick="openEditInstitutionModal()" title="Edit University & Department details">⚙️ Edit Details</button>
+        `}
         <button class="hierarchy-edit-btn" onclick="selectNavTab('hierarchy')">🌲 Drive Tree</button>
         <button class="hierarchy-edit-btn" onclick="selectNavTab('drivesync')">📊 Live Sheets Hub</button>
       </div>
@@ -514,21 +546,21 @@ async function openAuthModal() {
             <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
               <div class="form-group">
                 <label>Your Full Name *</label>
-                <input type="text" id="authName" value="${esc(state.currentUser.name || 'Dr. John Doe')}" placeholder="e.g. Dr. John Doe" required>
+                <input type="text" id="authName" value="${esc(state.currentUser?.name || '')}" placeholder="e.g. Dr. John Doe" required>
               </div>
               <div class="form-group">
                 <label>Google / Work Email *</label>
-                <input type="email" id="authEmail" value="${esc(state.currentUser.email || 'john.doe@university.edu')}" placeholder="e.g. john.doe@university.edu" required>
+                <input type="email" id="authEmail" value="${esc(state.currentUser?.email || '')}" placeholder="e.g. john.doe@university.edu" required>
               </div>
             </div>
 
             <div class="form-group">
               <label>Your Role in the Accreditation System *</label>
               <select id="authRole">
-                <option value="iqac" ${state.currentUser.role === 'iqac' ? 'selected' : ''}>Department HoD & IQAC Coordinator (Full Department Access)</option>
-                <option value="faculty" ${state.currentUser.role === 'faculty' ? 'selected' : ''}>Serving Faculty Member (Task Upload & Data Input)</option>
-                <option value="dean" ${state.currentUser.role === 'dean' ? 'selected' : ''}>School Dean / Director (School Oversight)</option>
-                <option value="director" ${state.currentUser.role === 'director' ? 'selected' : ''}>University IQAC Director (Central Governance)</option>
+                <option value="iqac" ${state.currentUser?.role === 'iqac' || !state.currentUser ? 'selected' : ''}>Department HoD & IQAC Coordinator (Full Department Access)</option>
+                <option value="faculty" ${state.currentUser?.role === 'faculty' ? 'selected' : ''}>Serving Faculty Member (Task Upload & Data Input)</option>
+                <option value="dean" ${state.currentUser?.role === 'dean' ? 'selected' : ''}>School Dean / Director (School Oversight)</option>
+                <option value="director" ${state.currentUser?.role === 'director' ? 'selected' : ''}>University IQAC Director (Central Governance)</option>
               </select>
             </div>
 
@@ -551,7 +583,7 @@ async function openAuthModal() {
             <div class="form-group">
               <label>Google Drive Folder URL (Evidence Vault)</label>
               <div style="display: flex; gap: 6px;">
-                <input type="url" id="authDriveUrl" value="${esc(currentDrive)}" placeholder="https://drive.google.com/drive/my-drive" style="flex: 1;">
+                <input type="url" id="authDriveUrl" value="${esc(currentDrive)}" placeholder="https://drive.google.com/drive/folders/..." style="flex: 1;">
                 <button type="button" class="btn" onclick="window.open('https://drive.google.com/drive/my-drive', '_blank')" title="Open Google Drive to create or copy folder link">📂 Open Drive</button>
               </div>
             </div>
@@ -584,7 +616,10 @@ async function openAuthModal() {
             </div>
           </div>
         </div>
-        <div class="modal-footer">
+        <div class="modal-footer" style="display: flex; justify-content: space-between;">
+          ${state.currentUser ? `
+            <button class="btn" style="color: #B93826;" onclick="logoutUser(); closeModal();">🚪 Sign Out</button>
+          ` : '<div></div>'}
           <button class="btn" onclick="closeModal()">Close</button>
         </div>
       </div>
@@ -649,6 +684,15 @@ async function executeCustomGoogleLogin() {
       showToast(`Signed in as ${res.user.name} (${res.user.role}) for ${state.institution.department_name}`, 'success');
       closeModal();
       render();
+
+      // If user hasn't explicitly connected a specific folder URL (contains /folders/), guide them to create role folder!
+      if (!drive_folder_url || !drive_folder_url.includes('/folders/')) {
+        const folderName = getRoleFolderName(res.user.role, res.user, res.institution || state.institution);
+        const level = (res.user.role === 'director') ? 'university' : ((res.user.role === 'dean') ? 'school' : 'department');
+        setTimeout(() => {
+          openPromptCreateRoleFolderModal(folderName, level);
+        }, 350);
+      }
     }
   } catch (err) {
     showToast('Login failed: ' + err.message, 'error');
@@ -830,6 +874,188 @@ async function saveDriveFolderLink(level, id) {
 }
 
 // ============================================================================
+// Role-Based Google Drive Folder Helpers & Access Control
+// ============================================================================
+function getRoleFolderName(role, user, inst) {
+  const u = user || state.currentUser || {};
+  const i = inst || state.institution || {};
+  const uniName = i.university_name || 'Apex University';
+  const schoolName = i.school_name || 'School of Engineering and Technology';
+  const deptName = i.department_name || 'Department of Civil Engineering';
+  const userName = u.name || 'Faculty Member';
+
+  switch (role) {
+    case 'director':
+      return `${uniName} - Central IQAC Accreditation Vault`;
+    case 'dean':
+      return `${schoolName} - Dean Quality & Accreditation Archive`;
+    case 'iqac':
+      return `${deptName} - IQAC Accreditation & Master Sheets`;
+    case 'faculty':
+      return `${deptName} - Faculty Evidence Vault (${userName})`;
+    default:
+      return `${deptName} - Accreditation Evidence Vault`;
+  }
+}
+
+function getLinkedFolderUrl(level, targetId) {
+  const hier = state.hierarchy || {};
+  if (level === 'university') {
+    const url = hier.university?.drive_folder_url || state.institution?.drive_folder_url;
+    return (url && url.includes('/folders/')) ? url : null;
+  }
+  if (level === 'school') {
+    const s = (hier.schools || []).find(sc => sc.id === targetId) || hier.schools?.[0];
+    const url = s?.drive_folder_url;
+    return (url && url.includes('/folders/')) ? url : null;
+  }
+  if (level === 'department') {
+    for (const sc of (hier.schools || [])) {
+      const d = (sc.departments || []).find(dept => dept.id === targetId);
+      if (d && d.drive_folder_url && d.drive_folder_url.includes('/folders/')) return d.drive_folder_url;
+    }
+    const defaultDept = hier.schools?.[0]?.departments?.[0];
+    if (defaultDept && defaultDept.drive_folder_url && defaultDept.drive_folder_url.includes('/folders/')) {
+      return defaultDept.drive_folder_url;
+    }
+  }
+  return null;
+}
+
+function openUserRoleDriveFolder(level = 'department', targetId = null) {
+  if (!state.currentUser) {
+    showToast('Please sign in first to access or initialize your role Google Drive folder.', 'error');
+    openAuthModal();
+    return;
+  }
+
+  const role = state.currentUser.role || 'faculty';
+  const folderName = getRoleFolderName(role, state.currentUser, state.institution);
+
+  let linkedUrl = getLinkedFolderUrl(level, targetId);
+  if (linkedUrl) {
+    showToast(`Opening ${folderName}...`, 'info');
+    window.open(linkedUrl, '_blank');
+    return;
+  }
+
+  // Not yet explicitly linked — guide the user to create/link their designated role folder
+  openPromptCreateRoleFolderModal(folderName, level, targetId);
+}
+
+function openPromptCreateRoleFolderModal(folderName, level = 'department', targetId = null) {
+  const roleNameMap = {
+    director: 'University IQAC Director',
+    dean: 'School Dean / Director',
+    iqac: 'Department HoD & IQAC Coordinator',
+    faculty: 'Serving Faculty Member'
+  };
+  const roleTitle = roleNameMap[state.currentUser?.role] || 'Accreditation Member';
+
+  const modalHtml = `
+    <div class="modal-backdrop" id="modalBackdrop">
+      <div class="modal-dialog" style="max-width: 580px;">
+        <div class="modal-header">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 28px; height: 28px; background: #4285F4; color: #FFF; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">📁</div>
+            <h3 style="font-size: 1.05rem;">Initialize Your Role Google Drive Folder</h3>
+          </div>
+          <button class="btn" onclick="closeModal()" style="border: none; font-size: 1.1rem;">✕</button>
+        </div>
+        <div class="modal-body">
+          <div style="background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px;">
+            <div style="font-size: 0.76rem; color: var(--ink-soft); text-transform: uppercase; font-weight: 600;">Active Account & Role:</div>
+            <div style="font-size: 0.92rem; font-weight: 700; color: var(--ink);">${esc(state.currentUser?.name || '')} (${esc(state.currentUser?.email || '')})</div>
+            <div style="font-size: 0.78rem; color: var(--accent); margin-top: 2px;">${roleTitle}</div>
+          </div>
+
+          <p style="font-size: 0.84rem; color: var(--ink); margin-bottom: 12px; line-height: 1.4;">
+            As <strong>${roleTitle}</strong>, all your accreditation evidence, files, and master spreadsheets must reside in your dedicated role folder on Google Drive:
+          </p>
+
+          <div style="background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 8px; padding: 12px 14px; margin-bottom: 16px;">
+            <div style="font-size: 0.76rem; color: var(--ink-muted); font-weight: 600; text-transform: uppercase;">Designated Role Folder Name:</div>
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 4px;">
+              <code style="font-size: 0.86rem; font-weight: 700; color: #0E355F; word-break: break-all;">${esc(folderName)}</code>
+              <button class="btn" style="padding: 4px 8px; font-size: 0.72rem; white-space: nowrap;" onclick="copyToClipboard('${esc(folderName)}', 'Folder name copied to clipboard!')">📋 Copy Name</button>
+            </div>
+          </div>
+
+          <div style="font-size: 0.82rem; margin-bottom: 14px;">
+            <strong>2-Step Guided Setup:</strong>
+            <ol style="margin: 6px 0 0 18px; padding: 0; line-height: 1.6; color: var(--ink-soft);">
+              <li>Click <strong>"➕ Open Google Drive & Create Folder"</strong> below (copies folder name & opens Drive).</li>
+              <li>Right-click your newly created folder in Drive &gt; <em>Share / Copy link</em> &gt; paste the link below to connect.</li>
+            </ol>
+          </div>
+
+          <div style="margin-bottom: 14px;">
+            <button class="btn primary" style="width: 100%; padding: 8px 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;" onclick="createFolderInGoogleDrive('${esc(folderName)}')">
+              <span>➕ Open Google Drive & Create Folder</span>
+            </button>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 0;">
+            <label style="font-weight: 600;">Paste Your Google Drive Folder Link to Connect:</label>
+            <input type="url" id="roleFolderUrlInput" placeholder="https://drive.google.com/drive/folders/..." style="font-size: 0.82rem;">
+            <span style="font-size: 0.72rem; color: var(--ink-muted);">Once linked, all your department data and evidence files will route directly into this folder.</span>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn" onclick="closeModal()">Skip for Now</button>
+          <button class="btn primary" onclick="submitRoleFolderLink('${esc(level)}', '${esc(targetId || '')}')">🔗 Link Folder & Save</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('modalRoot').innerHTML = modalHtml;
+}
+
+function copyToClipboard(text, successMsg) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => {
+      showToast(successMsg || 'Copied to clipboard!', 'success');
+    }).catch(() => {
+      showToast('Copied.', 'info');
+    });
+  }
+}
+
+function createFolderInGoogleDrive(folderName) {
+  copyToClipboard(folderName, `Copied "${folderName}" to clipboard! In Google Drive, click New > New folder and press Ctrl+V.`);
+  window.open('https://drive.google.com/drive/my-drive', '_blank');
+}
+
+async function submitRoleFolderLink(level, targetId) {
+  const url = document.getElementById('roleFolderUrlInput')?.value.trim();
+  if (!url) {
+    showToast('Please paste your Google Drive folder link', 'error');
+    return;
+  }
+  if (!url.startsWith('https://drive.google.com/')) {
+    showToast('Link must be a valid Google Drive URL (https://drive.google.com/...)', 'error');
+    return;
+  }
+
+  try {
+    const res = await api('/api/hierarchy/folder-link', {
+      method: 'PUT',
+      body: JSON.stringify({ level, targetId, folder_url: url })
+    });
+    if (res.hierarchy) {
+      state.hierarchy = res.hierarchy;
+      saveLocalCache();
+      showToast('Role Drive folder linked successfully!', 'success');
+      closeModal();
+      render();
+      window.open(url, '_blank');
+    }
+  } catch (err) {
+    showToast('Failed to link folder: ' + err.message, 'error');
+  }
+}
+
+// ============================================================================
 // University Hierarchy & Google Drive Folder Tree View
 // ============================================================================
 function renderHierarchyView() {
@@ -848,9 +1074,9 @@ function renderHierarchyView() {
         </div>
         <div style="display: flex; gap: 8px;">
           <button class="btn primary" onclick="openAddSchoolModal()">+ Create School Folder</button>
-          <a href="${esc(uni.drive_folder_url || 'https://drive.google.com/drive/my-drive')}" target="_blank" class="drive-open-btn">
+          <button class="drive-open-btn" onclick="openUserRoleDriveFolder('university', '${uni.id || 'uni-main'}')">
             📂 Open Root Drive Hub
-          </a>
+          </button>
         </div>
       </div>
 
@@ -871,9 +1097,9 @@ function renderHierarchyView() {
           </div>
           <div style="display: flex; align-items: center; gap: 8px;">
             <span class="drive-perm-tag" style="background: rgba(255,255,255,0.2); color: #FFF;">University IQAC Access</span>
-            <a href="${esc(uni.drive_folder_url || 'https://drive.google.com/drive/my-drive')}" target="_blank" class="drive-open-btn" style="color: #0E355F;">
+            <button class="drive-open-btn" style="color: #0E355F;" onclick="openUserRoleDriveFolder('university', '${uni.id || 'uni-main'}')">
               📂 Open Drive
-            </a>
+            </button>
             <button class="btn" style="padding: 3px 8px; font-size: 0.74rem; background: rgba(255,255,255,0.9); color: #0E355F;" onclick="openEditDriveFolderModal('university', '${uni.id || 'uni-main'}', '${esc(uni.drive_folder_url || '')}', '${esc(uni.name || uni.university_name)}')">
               ✏️ Connect
             </button>
@@ -894,9 +1120,9 @@ function renderHierarchyView() {
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <span class="drive-perm-tag">Dean & School IQAC</span>
-                  <a href="${esc(school.drive_folder_url || 'https://drive.google.com/drive/my-drive')}" target="_blank" class="drive-open-btn">
+                  <button class="drive-open-btn" onclick="openUserRoleDriveFolder('school', '${school.id}')">
                     📂 School Drive
-                  </a>
+                  </button>
                   <button class="btn" style="padding: 3px 8px; font-size: 0.74rem;" onclick="openEditDriveFolderModal('school', '${school.id}', '${esc(school.drive_folder_url || '')}', '${esc(school.name)}')">
                     ✏️ Connect
                   </button>
@@ -919,9 +1145,9 @@ function renderHierarchyView() {
                       </div>
                       <div style="display: flex; gap: 8px; align-items: center;">
                         <span class="pill approved">Live Active Dept</span>
-                        <a href="${esc(dept.drive_folder_url || 'https://drive.google.com/drive/my-drive')}" target="_blank" class="drive-open-btn">
+                        <button class="drive-open-btn" onclick="openUserRoleDriveFolder('department', '${dept.id}')">
                           📂 Dept Drive
-                        </a>
+                        </button>
                         <button class="btn" style="padding: 3px 8px; font-size: 0.74rem;" onclick="openEditDriveFolderModal('department', '${dept.id}', '${esc(dept.drive_folder_url || '')}', '${esc(dept.name)}')">
                           ✏️ Connect
                         </button>
@@ -932,9 +1158,9 @@ function renderHierarchyView() {
                     <div style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--line-light); display: flex; flex-wrap: wrap; gap: 8px;">
                       <span style="font-size: 0.72rem; color: var(--ink-soft); align-self: center;">Pre-configured Google Sheets:</span>
                       ${dept.sheets ? Object.keys(dept.sheets).map(k => `
-                        <a href="${esc(dept.sheets[k].sheet_url)}" target="_blank" class="btn" style="padding: 2px 7px; font-size: 0.72rem; display: inline-flex; align-items: center; gap: 4px;" title="Open ${esc(dept.sheets[k].title)} in Google Sheets">
+                        <button class="btn" style="padding: 2px 7px; font-size: 0.72rem; display: inline-flex; align-items: center; gap: 4px;" onclick="openAccountGoogleSheet('${k}')" title="Open ${esc(k)} in Google Sheets">
                           📊 ${esc(k.charAt(0).toUpperCase() + k.slice(1))}
-                        </a>
+                        </button>
                       `).join('') : '<span style="font-size: 0.72rem; color: var(--ink-soft);">Standard sheets generated</span>'}
                     </div>
                   </div>
@@ -1162,21 +1388,28 @@ function getAccountSheetUrl(collKey) {
   const userEmail = (state.currentUser?.email || 'default').toLowerCase();
   const savedKey = `gsheet_${userEmail}_${collKey}`;
   const saved = localStorage.getItem(savedKey);
-  if (saved) return saved;
+  if (saved && saved.includes('/spreadsheets/d/')) return saved;
 
   const deptSheets = state.hierarchy?.schools?.[0]?.departments?.[0]?.sheets;
-  if (deptSheets && deptSheets[collKey]?.sheet_url) {
+  if (deptSheets && deptSheets[collKey]?.sheet_url && deptSheets[collKey].sheet_url.includes('/spreadsheets/d/')) {
     return deptSheets[collKey].sheet_url;
   }
   return null;
 }
 
 function openAccountGoogleSheet(collKey) {
+  if (!state.currentUser) {
+    showToast('Please sign in with your Google account first to access your live Google Sheets.', 'error');
+    openAuthModal();
+    return;
+  }
+
   const existingUrl = getAccountSheetUrl(collKey);
   if (existingUrl) {
     showToast(`Opening Google Sheet for ${state.currentUser.name}...`, 'info');
     window.open(existingUrl, '_blank');
   } else {
+    // Open the setup modal which pre-copies sample entries and guides the user!
     openConnectSheetModal(collKey);
   }
 }
@@ -1193,22 +1426,52 @@ function copySampleDataAndOpenSheets(collKey) {
     : [];
 
   if (rowsToExport.length === 0) {
-    rowsToExport = [
-      { name: 'Dr. John Doe', email: 'john.doe@university.edu', designation: 'Professor', qualification: 'Ph.D.', specialization: 'Structural Engineering', experience_years: 12, employment_type: 'Regular', service_status: 'Current', gender: 'Male', publications_3yr: 5, patents: 1, evidence_url: 'https://orcid.org' }
-    ];
+    if (collKey === 'faculty') {
+      rowsToExport = [
+        { name: 'Dr. John Doe', email: 'john.doe@university.edu', designation: 'Professor', qualification: 'Ph.D.', specialization: 'Structural Engineering & Dynamics', experience_years: 22, employment_type: 'Regular', service_status: 'Current', gender: 'Male', publications_3yr: 14, patents: 2, evidence_url: 'https://orcid.org' },
+        { name: 'Dr. Jane Smith', email: 'jane.smith@university.edu', designation: 'Associate Professor', qualification: 'Ph.D.', specialization: 'Geotechnical & Geo-environmental Engineering', experience_years: 15, employment_type: 'Regular', service_status: 'Current', gender: 'Female', publications_3yr: 9, patents: 1, evidence_url: 'https://orcid.org' },
+        { name: 'Dr. Robert Taylor', email: 'robert.taylor@university.edu', designation: 'Associate Professor', qualification: 'Ph.D.', specialization: 'Water Resources & Climate Change', experience_years: 11, employment_type: 'Regular', service_status: 'Current', gender: 'Male', publications_3yr: 7, patents: 1, evidence_url: 'https://orcid.org' },
+        { name: 'Prof. Alice Johnson', email: 'alice.johnson@university.edu', designation: 'Assistant Professor', qualification: 'M.Tech / M.E.', specialization: 'Transportation Systems & Smart Urban Mobility', experience_years: 6, employment_type: 'Regular', service_status: 'Current', gender: 'Female', publications_3yr: 4, patents: 0, evidence_url: 'https://orcid.org' },
+        { name: 'Dr. Michael Brown', email: 'michael.brown@university.edu', designation: 'Professor', qualification: 'Ph.D.', specialization: 'Environmental Engineering & Wastewater Treatment', experience_years: 18, employment_type: 'Regular', service_status: 'Current', gender: 'Male', publications_3yr: 11, patents: 2, evidence_url: 'https://orcid.org' }
+      ];
+    } else if (collKey === 'students') {
+      rowsToExport = [
+        { roll_no: '23BCIV001', name: 'Alex Morgan', gender: 'Female', category: 'General', state_country: 'California / Delhi', is_pwd: false, program: 'B.Tech in Civil Engineering', batch_year: '2023-27', status: 'Active', placement_status: 'Undergraduate', higher_studies: 'Pending' },
+        { roll_no: '22BCIV015', name: 'Jordan Lee', gender: 'Male', category: 'SC', state_country: 'Texas / Ontario', is_pwd: false, program: 'B.Tech in Civil Engineering', batch_year: '2022-26', status: 'Active', placement_status: 'Placed (Infrastructure Corp - $85k)', higher_studies: 'No' },
+        { roll_no: '21BCIV042', name: 'Taylor Swift', gender: 'Female', category: 'OBC', state_country: 'New York', is_pwd: false, program: 'B.Tech in Civil Engineering', batch_year: '2021-25', status: 'Graduated', placement_status: 'Placed (L&T Infrastructure)', higher_studies: 'GRE Qualified' }
+      ];
+    } else if (collKey === 'infrastructure') {
+      rowsToExport = [
+        { category: 'Laboratory', name: 'Advanced Structural Dynamics & Heavy Testing Lab (Room CE-104)', capacity: '60 students / 2400 sq.ft', equipment_count: 14, year_established: 2018, evidence_note: 'Geo-tagged photos & NABL calibration certificates filed in Room CE-104' },
+        { category: 'ICT Infrastructure', name: 'BIM, GIS & Civil CAD Computing Center (Room CE-201)', capacity: '60 workstations', equipment_count: 60, year_established: 2021, evidence_note: 'AutoCAD, STAAD.Pro, ETABS, and ArcGIS licensed. 100 Mbps LAN available.' }
+      ];
+    } else if (collKey === 'research') {
+      rowsToExport = [
+        { type: 'Journal Publication', title: 'Seismic fragility curves for reinforced concrete frames with masonry infill walls', authors: 'Dr. John Doe, Dr. Jane Smith, et al.', year: 2025, venue: 'Journal of Structural Engineering (ASCE)', indexing: 'Scopus', amount_inr: null, evidence_url: 'https://doi.org/10.1061/JSENDH.STENG-12891' },
+        { type: 'Sponsored Research Project', title: 'Development of low-carbon alkali-activated geopolymer concrete utilizing industrial slag', authors: 'Dr. Robert Taylor (PI), Dr. Jane Smith (Co-PI)', year: 2024, venue: 'National Science & Research Foundation', indexing: 'Peer Reviewed / Other', amount_inr: 3450000, evidence_url: 'https://orcid.org' }
+      ];
+    } else if (collKey === 'events') {
+      rowsToExport = [
+        { title: '5-Day Faculty Development Program on Earthquake Engineering & Disaster Resilience', category: 'Faculty Development Program (FDP)', coordinator: 'Dr. John Doe', start_date: '2025-02-14', end_date: '2025-02-18', participants_count: 55, venue: 'Seminar Hall, Main Campus', evidence_url: 'https://drive.google.com' }
+      ];
+    } else if (collKey === 'programs') {
+      rowsToExport = [
+        { name: 'B.Tech in Civil Engineering', level: 'UG', tier: 'Tier-I (Washington Accord)', intake: 120, co_count: 360, po_count: 12, attainment_pct: 84.2 }
+      ];
+    }
   }
 
   // TSV formatted string (compatible with direct paste into Google Sheets cell A1)
   const tsvLines = [headers.join('\t')];
   rowsToExport.forEach(r => {
-    const line = keys.map(k => esc(r[k]).replace(/\t/g, ' ')).join('\t');
+    const line = keys.map(k => esc(r[k] !== undefined && r[k] !== null ? r[k] : '').replace(/\t/g, ' ')).join('\t');
     tsvLines.push(line);
   });
   const tsvText = tsvLines.join('\n');
 
   if (navigator.clipboard) {
     navigator.clipboard.writeText(tsvText).then(() => {
-      showToast('✓ Sample data copied to clipboard! Paste (Ctrl+V) in cell A1 of Google Sheets.', 'success');
+      showToast(`✓ Copied ${rowsToExport.length} sample entries! Paste (Ctrl+V) in cell A1 of Google Sheets.`, 'success');
       window.open('https://sheets.new', '_blank');
     }).catch(() => {
       window.open('https://sheets.new', '_blank');
@@ -1216,6 +1479,18 @@ function copySampleDataAndOpenSheets(collKey) {
   } else {
     window.open('https://sheets.new', '_blank');
   }
+}
+
+function downloadSampleCsv(collKey) {
+  const dept = (state.institution?.department_name || 'Department').replace(/[^a-zA-Z0-9]/g, '_');
+  const url = `/api/sheets/csv/${collKey}`;
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${dept}_${collKey}_Sample.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  showToast('✓ Sample CSV downloaded! You can drag & drop it directly into your Google Drive folder.', 'success');
 }
 
 function openConnectSheetModal(collKey) {
@@ -1226,56 +1501,82 @@ function openConnectSheetModal(collKey) {
 
   const modalHtml = `
     <div class="modal-backdrop" id="modalBackdrop">
-      <div class="modal-dialog" style="max-width: 540px;">
+      <div class="modal-dialog" style="max-width: 600px;">
         <div class="modal-header">
           <div style="display: flex; align-items: center; gap: 8px;">
             <div style="width: 28px; height: 28px; background: #0F9D58; color: #FFF; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700;">📊</div>
-            <h3>Account Google Sheet — ${cfg.label}</h3>
+            <h3>Pre-Filled Google Sheet — ${cfg.label}</h3>
           </div>
           <button class="btn" onclick="closeModal()" style="border: none; font-size: 1.1rem;">✕</button>
         </div>
         <div class="modal-body">
           <div style="background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px;">
-            <div style="font-size: 0.8rem; color: var(--ink-soft);">Active User Account:</div>
-            <strong style="font-size: 0.92rem; color: var(--ink);">${esc(u.name)} (${esc(u.email)})</strong>
-            <div style="font-size: 0.75rem; color: var(--accent); margin-top: 2px;">Department of Civil Engineering · ${esc(u.title || u.role)}</div>
+            <div style="font-size: 0.76rem; color: var(--ink-soft); text-transform: uppercase; font-weight: 600;">Active Account & Department:</div>
+            <strong style="font-size: 0.92rem; color: var(--ink);">${esc(u?.name || 'Department Member')} (${esc(u?.email || '')})</strong>
+            <div style="font-size: 0.75rem; color: var(--accent); margin-top: 2px;">${esc(state.institution?.department_name || 'Department of Civil Engineering')} · ${esc(u?.title || u?.role || 'IQAC')}</div>
           </div>
 
-          <h4 style="font-size: 0.85rem; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 8px;">
-            Step 1: Create Pre-Filled Google Sheet
-          </h4>
-          <div style="border: 1px solid var(--line); border-radius: 8px; padding: 14px; background: var(--paper-card); margin-bottom: 16px;">
-            <p style="font-size: 0.82rem; color: var(--ink-soft); margin-bottom: 10px;">
-              Click below to copy all column headers and sample entries directly to your clipboard and open a new Google Sheet in your account:
+          <div style="background: #E8F5E9; border: 1px solid #A5D6A7; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; font-size: 0.8rem; color: #1B5E20; line-height: 1.4;">
+            💡 <strong>Why are newly created Google Sheets blank?</strong><br>
+            When Google opens a new spreadsheet, Google creates an empty sheet. Below are <strong>3 easy ways</strong> to immediately populate it with official sample data and column headers:
+          </div>
+
+          <!-- Method 1: 1-Click Copy & Open -->
+          <div style="border: 1px solid var(--line); border-radius: 8px; padding: 14px; background: var(--paper-card); margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <strong style="font-size: 0.86rem; color: var(--ink);">Method 1: 1-Click Copy Sample Data & Open Sheet (Fastest)</strong>
+              <span class="pill approved" style="font-size: 0.7rem;">Recommended</span>
+            </div>
+            <p style="font-size: 0.78rem; color: var(--ink-soft); margin-bottom: 10px;">
+              Copies all official column headers and sample rows directly to your clipboard and opens <strong>sheets.new</strong> in your Google account.
             </p>
-            <button class="btn-google-sheet" style="width: 100%; justify-content: center; padding: 8px;" onclick="copySampleDataAndOpenSheets('${collKey}')">
-              📋 Copy Sample Data & Open Google Sheets
+            <button class="btn-google-sheet" style="width: 100%; justify-content: center; padding: 9px; font-weight: 600;" onclick="copySampleDataAndOpenSheets('${collKey}')">
+              📋 Copy Pre-Filled Sample Entries & Open Google Sheets
             </button>
-            <div style="font-size: 0.74rem; color: var(--ink-muted); margin-top: 8px; text-align: center;">
-              (Opens <strong>sheets.new</strong> in your Google Account — press <strong>Ctrl+V</strong> in cell A1)
-            </div>
-
-            <div style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); font-size: 0.76rem; color: var(--ink-soft);">
-              <strong>Or use Live Formula in cell A1:</strong>
-              <div style="background: var(--paper); padding: 6px 8px; border-radius: 4px; font-family: var(--font-mono); margin-top: 4px; font-size: 0.72rem; overflow-x: auto; user-select: all; border: 1px solid var(--line);">
-                =IMPORTDATA("${importUrl}")
-              </div>
+            <div style="font-size: 0.73rem; color: var(--ink-muted); margin-top: 6px; text-align: center;">
+              Press <strong>Ctrl+V</strong> (or right-click &gt; Paste) in cell <strong>A1</strong> of the opened sheet.
             </div>
           </div>
 
-          <h4 style="font-size: 0.85rem; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 8px;">
-            Step 2: Save Your Google Sheet Link
+          <!-- Method 2: Download CSV for Drive Upload -->
+          <div style="border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; background: var(--paper-card); margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <strong style="font-size: 0.84rem; color: var(--ink);">Method 2: Download Pre-Filled CSV for Google Drive</strong>
+            </div>
+            <p style="font-size: 0.78rem; color: var(--ink-soft); margin-bottom: 8px;">
+              Download the sample dataset as a CSV file and drag it into your Google Drive folder. Double-clicking it opens it directly as a formatted Google Sheet.
+            </p>
+            <button class="btn" style="width: 100%; padding: 7px; font-size: 0.8rem;" onclick="downloadSampleCsv('${collKey}')">
+              📥 Download Sample CSV (${cfg.label})
+            </button>
+          </div>
+
+          <!-- Method 3: Formula Import -->
+          <div style="border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; background: var(--paper-card); margin-bottom: 16px;">
+            <strong style="font-size: 0.84rem; color: var(--ink);">Method 3: Live Sync Formula in Cell A1</strong>
+            <p style="font-size: 0.78rem; color: var(--ink-soft); margin-top: 4px; margin-bottom: 6px;">
+              Paste this formula into cell A1 of any blank sheet to pull sample entries live from the portal:
+            </p>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <input type="text" readonly value='=IMPORTDATA("${importUrl}")' style="font-family: var(--font-mono); font-size: 0.74rem; background: var(--paper); flex: 1;" id="formulaInput_${collKey}">
+              <button class="btn" style="padding: 4px 10px; font-size: 0.74rem; white-space: nowrap;" onclick="copyToClipboard(document.getElementById('formulaInput_${collKey}').value, 'Formula copied!')">📋 Copy Formula</button>
+            </div>
+          </div>
+
+          <h4 style="font-size: 0.85rem; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 8px; letter-spacing: 0.04em;">
+            Step 2: Connect Your Sheet to Your Account
           </h4>
-          <p style="font-size: 0.82rem; color: var(--ink-soft); margin-bottom: 8px;">
-            Paste the URL of your created Google Sheet below. It will be permanently linked to <strong>${esc(u.email)}</strong>:
+          <p style="font-size: 0.8rem; color: var(--ink-soft); margin-bottom: 8px;">
+            Paste the URL of your Google Sheet below to permanently link it to <strong>${esc(u?.email || 'your account')}</strong>:
           </p>
-          <div class="form-group">
-            <input type="text" id="customSheetUrl" placeholder="https://docs.google.com/spreadsheets/d/..." value="${esc(existingUrl)}">
+          <div class="form-group" style="margin-bottom: 0;">
+            <input type="url" id="customSheetUrl" placeholder="https://docs.google.com/spreadsheets/d/..." value="${esc(existingUrl)}">
+            <span style="font-size: 0.72rem; color: var(--ink-muted);">Once saved, clicking "Open in Google Sheets" will jump directly to your populated sheet.</span>
           </div>
         </div>
         <div class="modal-footer">
           <button class="btn" onclick="closeModal()">Close</button>
-          <button class="btn primary" onclick="saveLinkedSheet('${collKey}')">💾 Save Link to My Account & Sync</button>
+          <button class="btn primary" onclick="saveLinkedSheet('${collKey}')">💾 Link Sheet to My Account & Sync</button>
         </div>
       </div>
     </div>
@@ -1289,6 +1590,10 @@ async function saveLinkedSheet(collKey) {
     showToast('Please enter the Google Sheet URL', 'error');
     return;
   }
+  if (!url.includes('docs.google.com/spreadsheets/d/')) {
+    showToast('Please enter a valid Google Sheet URL (containing /spreadsheets/d/...)', 'error');
+    return;
+  }
   const userEmail = (state.currentUser?.email || 'default').toLowerCase();
   const savedKey = `gsheet_${userEmail}_${collKey}`;
   localStorage.setItem(savedKey, url);
@@ -1300,8 +1605,11 @@ async function saveLinkedSheet(collKey) {
     });
   } catch (_) {}
 
-  showToast(`✓ Google Sheet linked to ${state.currentUser.name}'s account.`, 'success');
+  showToast(`✓ Google Sheet linked to ${state.currentUser?.name || 'your'} account.`, 'success');
   closeModal();
+  render();
+  await syncFromGoogleSheet(collKey, url);
+}
   render();
   await syncFromGoogleSheet(collKey, url);
 }
