@@ -428,6 +428,48 @@ app.get('/api/sheets/open/:table', async (req, res) => {
   }
 });
 
+// CSV feed for Google Sheets =IMPORTDATA formula with sample and live department data
+app.get('/api/sheets/csv/:table', async (req, res) => {
+  const { table } = req.params;
+  const cfg = SCHEMA_CONFIG[table];
+  if (!cfg) return res.status(404).json({ error: 'Unknown table: ' + table });
+
+  try {
+    const records = await db.getCollection(table);
+    const dataToExport = (records && records.length > 0) ? records : cfg.sample;
+
+    const ws = xlsx.utils.json_to_sheet(dataToExport);
+    const csv = xlsx.utils.sheet_to_csv(ws);
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.send(csv);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Persist account-specific Google Sheet link
+app.post('/api/sheets/account-link', async (req, res) => {
+  try {
+    const { email, table, sheet_url } = req.body;
+    if (!email || !table || !sheet_url) {
+      return res.status(400).json({ error: 'email, table, and sheet_url are required' });
+    }
+    await db.updateDepartmentSheets('dept-civil', {
+      [table]: {
+        title: `CHRIST_Civil_${table.toUpperCase()}`,
+        sheet_url,
+        account_email: email,
+        last_synced: new Date().toISOString()
+      }
+    });
+    res.json({ success: true, message: 'Google Sheet linked to account successfully.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.post('/api/sheets/sync/:table', assertTable, async (req, res) => {
   try {
     const { actor, role } = extractActor(req);

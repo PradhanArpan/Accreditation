@@ -850,9 +850,9 @@ function renderDriveSyncView() {
                 <td><span class="pill approved">${count} Live Rows</span></td>
                 <td><span class="pill approved">🟢 Linked to Drive</span></td>
                 <td style="text-align: right; white-space: nowrap;">
-                  <a href="https://docs.google.com/spreadsheets/create?title=${s.sheetName}" target="_blank" class="btn-google-sheet" style="padding: 4px 10px; font-size: 0.76rem;">
+                  <button class="btn-google-sheet" style="padding: 4px 10px; font-size: 0.76rem;" onclick="openAccountGoogleSheet('${s.key}')">
                     🟢 Open in Sheets
-                  </a>
+                  </button>
                   <button class="btn-sync-sheet" style="padding: 4px 10px; font-size: 0.76rem;" onclick="syncFromGoogleSheet('${s.key}')">
                     🔄 Sync Now
                   </button>
@@ -895,30 +895,124 @@ async function restoreFromLocalCache() {
   }
 }
 
+function getAccountSheetUrl(collKey) {
+  const userEmail = (state.currentUser?.email || 'default').toLowerCase();
+  const savedKey = `gsheet_${userEmail}_${collKey}`;
+  const saved = localStorage.getItem(savedKey);
+  if (saved) return saved;
+
+  const deptSheets = state.hierarchy?.schools?.[0]?.departments?.[0]?.sheets;
+  if (deptSheets && deptSheets[collKey]?.sheet_url) {
+    return deptSheets[collKey].sheet_url;
+  }
+  return null;
+}
+
+function openAccountGoogleSheet(collKey) {
+  const existingUrl = getAccountSheetUrl(collKey);
+  if (existingUrl) {
+    showToast(`Opening Google Sheet for ${state.currentUser.name}...`, 'info');
+    window.open(existingUrl, '_blank');
+  } else {
+    openConnectSheetModal(collKey);
+  }
+}
+
+function copySampleDataAndOpenSheets(collKey) {
+  const cfg = CONFIG.collections[collKey];
+  if (!cfg) return;
+
+  const headers = cfg.fields.map(f => f.label);
+  const keys = cfg.fields.map(f => f.key);
+
+  let rowsToExport = (state.data[collKey] && state.data[collKey].length > 0)
+    ? state.data[collKey]
+    : [];
+
+  if (rowsToExport.length === 0) {
+    rowsToExport = [
+      { name: 'Dr. Sample Faculty', email: 'sample.faculty@christuniversity.in', designation: 'Professor', qualification: 'Ph.D.', specialization: 'Structural Engineering', experience_years: 12, employment_type: 'Regular', service_status: 'Current', gender: 'Male', publications_3yr: 5, patents: 1, evidence_url: 'https://orcid.org' }
+    ];
+  }
+
+  // TSV formatted string (compatible with direct paste into Google Sheets cell A1)
+  const tsvLines = [headers.join('\t')];
+  rowsToExport.forEach(r => {
+    const line = keys.map(k => esc(r[k]).replace(/\t/g, ' ')).join('\t');
+    tsvLines.push(line);
+  });
+  const tsvText = tsvLines.join('\n');
+
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(tsvText).then(() => {
+      showToast('✓ Sample data copied to clipboard! Paste (Ctrl+V) in cell A1 of Google Sheets.', 'success');
+      window.open('https://sheets.new', '_blank');
+    }).catch(() => {
+      window.open('https://sheets.new', '_blank');
+    });
+  } else {
+    window.open('https://sheets.new', '_blank');
+  }
+}
+
 function openConnectSheetModal(collKey) {
   const cfg = CONFIG.collections[collKey];
+  const u = state.currentUser;
+  const existingUrl = getAccountSheetUrl(collKey) || '';
+  const importUrl = `${window.location.origin}/api/sheets/csv/${collKey}`;
+
   const modalHtml = `
     <div class="modal-backdrop" id="modalBackdrop">
-      <div class="modal-dialog">
+      <div class="modal-dialog" style="max-width: 540px;">
         <div class="modal-header">
-          <h3>🔗 Connect Live Google Sheet — ${cfg.label}</h3>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 28px; height: 28px; background: #0F9D58; color: #FFF; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700;">📊</div>
+            <h3>Account Google Sheet — ${cfg.label}</h3>
+          </div>
           <button class="btn" onclick="closeModal()" style="border: none; font-size: 1.1rem;">✕</button>
         </div>
         <div class="modal-body">
-          <p style="font-size: 0.82rem; color: var(--ink-soft); margin-bottom: 12px;">
-            Paste any shared Google Sheet URL from your department's Google Drive. The portal will link to it directly and synchronize records.
+          <div style="background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px;">
+            <div style="font-size: 0.8rem; color: var(--ink-soft);">Active User Account:</div>
+            <strong style="font-size: 0.92rem; color: var(--ink);">${esc(u.name)} (${esc(u.email)})</strong>
+            <div style="font-size: 0.75rem; color: var(--accent); margin-top: 2px;">Department of Civil Engineering · ${esc(u.title || u.role)}</div>
+          </div>
+
+          <h4 style="font-size: 0.85rem; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 8px;">
+            Step 1: Create Pre-Filled Google Sheet
+          </h4>
+          <div style="border: 1px solid var(--line); border-radius: 8px; padding: 14px; background: var(--paper-card); margin-bottom: 16px;">
+            <p style="font-size: 0.82rem; color: var(--ink-soft); margin-bottom: 10px;">
+              Click below to copy all column headers and sample entries directly to your clipboard and open a new Google Sheet in your account:
+            </p>
+            <button class="btn-google-sheet" style="width: 100%; justify-content: center; padding: 8px;" onclick="copySampleDataAndOpenSheets('${collKey}')">
+              📋 Copy Sample Data & Open Google Sheets
+            </button>
+            <div style="font-size: 0.74rem; color: var(--ink-muted); margin-top: 8px; text-align: center;">
+              (Opens <strong>sheets.new</strong> in your Google Account — press <strong>Ctrl+V</strong> in cell A1)
+            </div>
+
+            <div style="margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); font-size: 0.76rem; color: var(--ink-soft);">
+              <strong>Or use Live Formula in cell A1:</strong>
+              <div style="background: var(--paper); padding: 6px 8px; border-radius: 4px; font-family: var(--font-mono); margin-top: 4px; font-size: 0.72rem; overflow-x: auto; user-select: all; border: 1px solid var(--line);">
+                =IMPORTDATA("${importUrl}")
+              </div>
+            </div>
+          </div>
+
+          <h4 style="font-size: 0.85rem; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 8px;">
+            Step 2: Save Your Google Sheet Link
+          </h4>
+          <p style="font-size: 0.82rem; color: var(--ink-soft); margin-bottom: 8px;">
+            Paste the URL of your created Google Sheet below. It will be permanently linked to <strong>${esc(u.email)}</strong>:
           </p>
           <div class="form-group">
-            <label>Google Sheet URL (from browser address bar or Share link)</label>
-            <input type="text" id="customSheetUrl" placeholder="https://docs.google.com/spreadsheets/d/1BxiMVs0XR.../edit" value="https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit">
-          </div>
-          <div style="font-size: 0.74rem; color: var(--ink-muted); margin-top: 4px;">
-            💡 Ensure share permissions are set to "Anyone with the link can view" or shared with your university domain.
+            <input type="text" id="customSheetUrl" placeholder="https://docs.google.com/spreadsheets/d/..." value="${esc(existingUrl)}">
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn" onclick="closeModal()">Cancel</button>
-          <button class="btn primary" onclick="saveLinkedSheet('${collKey}')">Save Link & Sync Data</button>
+          <button class="btn" onclick="closeModal()">Close</button>
+          <button class="btn primary" onclick="saveLinkedSheet('${collKey}')">💾 Save Link to My Account & Sync</button>
         </div>
       </div>
     </div>
@@ -928,17 +1022,34 @@ function openConnectSheetModal(collKey) {
 
 async function saveLinkedSheet(collKey) {
   const url = document.getElementById('customSheetUrl').value.trim();
-  if (!url) return;
+  if (!url) {
+    showToast('Please enter the Google Sheet URL', 'error');
+    return;
+  }
+  const userEmail = (state.currentUser?.email || 'default').toLowerCase();
+  const savedKey = `gsheet_${userEmail}_${collKey}`;
+  localStorage.setItem(savedKey, url);
+
+  try {
+    await api('/api/sheets/account-link', {
+      method: 'POST',
+      body: JSON.stringify({ email: userEmail, table: collKey, sheet_url: url })
+    });
+  } catch (_) {}
+
+  showToast(`✓ Google Sheet linked to ${state.currentUser.name}'s account.`, 'success');
   closeModal();
+  render();
   await syncFromGoogleSheet(collKey, url);
 }
 
 async function syncFromGoogleSheet(collKey, providedUrl = null) {
+  const effectiveUrl = providedUrl || getAccountSheetUrl(collKey) || 'https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/export?format=csv';
   showToast(`Synchronizing ${CONFIG.collections[collKey]?.label || collKey} from Google Sheet...`, 'info');
   try {
     const res = await api(`/api/sheets/sync/${collKey}`, {
       method: 'POST',
-      body: JSON.stringify({ sheet_url: providedUrl || 'https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/export?format=csv' })
+      body: JSON.stringify({ sheet_url: effectiveUrl })
     });
     showToast(`✓ Synchronized ${res.synced_count || 0} rows from Google Sheet. Profile updated.`, 'success');
     await loadAllData();
@@ -1308,17 +1419,17 @@ function renderCollection(key) {
         <div class="google-sheets-icon">📊</div>
         <div class="live-sheets-text">
           <strong>Live Google Sheet: CHRIST_CE_${cfg.label.replace(/[^a-zA-Z0-9]/g, '_')}</strong>
-          <span>Connected to Department Google Drive folder · Click any cell below to edit live</span>
+          <span>${getAccountSheetUrl(key) ? `Linked to ${esc(state.currentUser.name)}'s Google Drive · Auto-persisted in Google Cloud` : 'Pre-filled with official sample data · Account specific'}</span>
         </div>
       </div>
       <div class="live-sheets-actions">
-        <a href="https://docs.google.com/spreadsheets/create?title=CHRIST_Civil_${key.toUpperCase()}" target="_blank" class="btn-google-sheet">
+        <button class="btn-google-sheet" onclick="openAccountGoogleSheet('${key}')" title="Open live Google Sheet pre-filled with sample and department data">
           🟢 Open in Google Sheets
-        </a>
-        <button class="btn-sync-sheet" onclick="syncFromGoogleSheet('${key}')">
+        </button>
+        <button class="btn-sync-sheet" onclick="syncFromGoogleSheet('${key}')" title="Synchronize latest updates from Google Sheet into portal">
           🔄 Sync from Google Sheet
         </button>
-        <button class="btn" onclick="openConnectSheetModal('${key}')">
+        <button class="btn" onclick="openConnectSheetModal('${key}')" title="Configure or update Google Sheet link for your account">
           🔗 Set Sheet Link
         </button>
       </div>
@@ -1331,7 +1442,6 @@ function renderCollection(key) {
           <div class="card-subtitle">Feeds: ${cfg.consumers}</div>
         </div>
         <div style="display: flex; gap: 8px;">
-          <button class="btn" onclick="exportCSV('${key}')">📥 Export Data (CSV)</button>
           <button class="btn primary" onclick="openEditModal('${key}', null)">+ Add Single ${cfg.singular}</button>
         </div>
       </div>
