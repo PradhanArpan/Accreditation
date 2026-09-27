@@ -1,117 +1,105 @@
-# Civil Engineering — Accreditation Data Portal
+# VERITA — Civil Engineering Accreditation Portal
 
-Dept. of Civil Engineering · School of Engineering & Technology · CHRIST (Deemed to be University)
+**Department of Civil Engineering · School of Engineering & Technology**  
+**CHRIST (Deemed to be University), Bengaluru**
 
-A small full-stack app: Express API + Postgres + a plain-JS frontend. Same data model and workflow as the earlier prototype (Faculty / Infrastructure / Research / Programs, IQAC review, readiness dashboard, printable reports) — now backed by a real database you control, instead of living only inside a Claude artifact.
+An enterprise-grade, full-stack continuous accreditation and quality assurance portal designed to streamline **NAAC SSR (Criteria 1–7)**, **NBA SAR (Washington Accord Tier-I OBE)**, **NIRF Engineering Ranking**, and **AICTE Mandatory Disclosure** data collection, verification, and report compilation.
 
 ---
 
-## 1. Run it locally
+## 🌟 Key Features & Architectural Upgrades
 
-**Requirements:** Node.js 18+, and a Postgres database (local install, or Docker).
+1. **Hybrid Zero-Config Database Architecture**:
+   - **Local Mode**: Runs instantly out of the box with embedded persistent JSON storage (`db/local_data.json`) — zero external database installation required.
+   - **Production / Cloud Mode**: Seamlessly switches to managed **PostgreSQL** when `DATABASE_URL` is set (e.g., Render, Neon, Supabase, AWS RDS).
+   - **Auto-Seeding**: Comes pre-populated with realistic department datasets (Faculty profiles with ORCID/Scopus IDs, Geotechnical & Structural Labs, Scopus journal publications, DST-SERB research grants, B.Tech/M.Tech NBA OBE attainment records).
 
+2. **Accreditation Readiness & Analytics Radar**:
+   - Live compliance percentage gauges for **NAAC**, **NBA**, **NIRF**, and **AICTE**.
+   - Automatic calculation of **Student-to-Faculty Ratio (SFR)** against AICTE/NBA norms ($\le 15:1$).
+   - Ph.D. faculty ratio, Cadre ratio analysis, and Research Grant tracking.
+
+3. **Multi-Role Simulation & Governance**:
+   - **Faculty / Department Staff**: Draft, edit, and submit records with supporting evidence links.
+   - **IQAC Reviewer / HoD**: Dedicated QA inbox to verify documentary evidence, approve records, or send back submissions with actionable feedback.
+   - **Accreditation Lead / Admin**: Full administrative rights and system-wide dossier generation.
+
+4. **Evidence & Audit Trail**:
+   - Support for ORCID, DOI URLs, Scopus Author IDs, geo-tagged lab equipment records, and NABL calibration reports.
+   - Immutable **Audit Trail** capturing all actions, timestamps, actors, and reviewer remarks.
+
+5. **Formal Compliance Dossier & Export**:
+   - Official, printable Christ University institutional compliance report with formal header and sign-off blocks.
+   - Single-click **JSON full backup** and per-table **CSV exports**.
+   - Accessible **Dark / Light Theme** toggle with persistent styling.
+
+---
+
+## 🚀 1. Running the Portal Locally
+
+### Prerequisites
+- Node.js 18+ (Tested on Node v24)
+
+### Quick Start
 ```bash
-# from inside the civil-portal folder
+# Navigate to the project directory
+cd "Accreditation Portal"
+
+# Install dependencies
 npm install
 
-# get a local Postgres running (skip if you already have one)
-# Docker one-liner:
-docker run --name civil-portal-db -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d postgres
-
-# create the database and load the schema
-createdb civil_portal            # or: docker exec -it civil-portal-db createdb -U postgres civil_portal
-psql civil_portal -f db/schema.sql   # or the docker-exec equivalent
-
-# set your connection string
-cp .env.example .env
-# edit .env if your Postgres isn't at the default local address
-
+# Start the portal
 npm start
 ```
 
-Open **http://localhost:3000** — that's the same UI as before, now reading and writing to your local Postgres.
+Open your browser and visit:  
+👉 **`http://localhost:3000`**
 
 ---
 
-## 2. Push it to GitHub
+## 🌐 2. Pushing to GitHub
 
 ```bash
-cd civil-portal
-git init
-git add .
-git commit -m "Initial commit — accreditation data portal"
-```
+# Set your remote GitHub repository URL
+git remote add origin https://github.com/<your-username>/<your-repo-name>.git
 
-Then, on github.com:
-1. Create a new **empty** repository (no README/license, so it doesn't conflict with what you already have) — e.g. `civil-eng-accreditation-portal`. Set it **private** — this holds department data, even if just structural for now.
-2. GitHub will show you the remote URL. Back in your terminal:
-```bash
-git remote add origin https://github.com/<your-username>/civil-eng-accreditation-portal.git
-git branch -M main
+# Push to main branch
 git push -u origin main
 ```
 
-You now have the code on GitHub. `.env` is git-ignored on purpose — your real database credentials never get committed.
+---
+
+## ☁️ 3. Deploying to Render (Free Cloud Hosting + Postgres)
+
+1. **Create Database**:
+   - On [Render](https://render.com), create a new **PostgreSQL** database (e.g. `christ-civil-portal-db`).
+2. **Create Web Service**:
+   - Create a new **Web Service** connected to your GitHub repository.
+   - Build Command: `npm install`
+   - Start Command: `npm start`
+   - Link the Postgres database under Environment Variables (`DATABASE_URL`).
+3. **Run**:
+   - Render automatically connects the database and launches HTTPS endpoints.
 
 ---
 
-## 3. Deploy on Render
-
-Render is a good fit here: free/low-cost managed Postgres, deploys straight from a GitHub repo, and handles HTTPS for you.
-
-**Step 1 — Create the database**
-1. In the Render dashboard: **New → PostgreSQL**.
-2. Name it (e.g. `civil-portal-db`), pick the free tier to start, create it.
-3. Once it's up, open it and find the **Internal Connection String** — Render will wire this to your web service automatically in the next step, so you don't need to copy it by hand.
-4. Run the schema against it once: Render's Postgres page gives you an external connection string too — use that with `psql` from your machine, or Render's built-in shell:
-   ```bash
-   psql <external-connection-string> -f db/schema.sql
-   ```
-
-**Step 2 — Create the web service**
-1. **New → Web Service**, connect your GitHub account, pick the `civil-eng-accreditation-portal` repo.
-2. Build command: `npm install`
-3. Start command: `npm start`
-4. Under **Environment**, click **Add Environment Variable → Add from Database** (or similar, naming varies slightly by Render UI version) and link the Postgres instance from Step 1 — this sets `DATABASE_URL` for you automatically.
-5. Deploy. Render gives you a URL like `https://civil-eng-accreditation-portal.onrender.com`.
-
-**Step 3 — Verify**
-- Visit the Render URL, confirm the dashboard loads and `/health` returns `{"ok":true}`.
-- Add a test faculty record, refresh the page, confirm it's still there — that confirms it's writing to Postgres, not just holding state in the browser.
-
-**Free-tier note:** Render's free web services spin down after inactivity and take ~30–60 seconds to wake on the next request. Fine for internal department use; upgrade to a paid instance if that delay becomes annoying, or if you want it always warm before an accreditation visit.
-
----
-
-## 4. What's still missing before this is "production" for real institutional use
-
-This mirrors the honest caveats from the prototype — carrying them forward so nothing gets lost in the excitement of it being "live":
-
-- **No login yet.** The `users` table exists in the schema but nothing in `server.js` checks it. Right now, anyone with the URL can edit data. Before sharing the link beyond yourself, add:
-  - a login page + session (simplest: `express-session` + `bcrypt` for password hashing, checked against the `users` table), or
-  - put the whole app behind CHRIST's SSO/Google Workspace login if that's available to you, which is usually less work than building your own auth.
-- **No role separation.** "IQAC approves" is currently just a status field anyone can flip. Once login exists, gate the Approve/Send-back buttons to `role = 'iqac'` or `'admin'`.
-- **No backups configured.** Render's free Postgres doesn't include automated backups — take this seriously once real data is in it. Paid tiers add backups; at minimum, periodically export via `pg_dump`.
-- **Single department, single row of "profile" data per year.** Fine for now; if you extend to other departments or need multiple academic years live at once, the schema needs an `institution_id` / `academic_year` composite key rather than a single row.
-- **NBA CO/PO/attainment is still just a summary number**, not the full per-course attainment table described in the earlier requirements document — extend `programs` into a proper `courses` + `attainment` table when you're ready to go deeper.
-
-None of this blocks you from using it for real department record-keeping today — it blocks you from treating it as secure/multi-user yet. Add auth before anyone besides you touches it.
-
----
-
-## 5. Project structure
+## 📁 Project Structure
 
 ```
-civil-portal/
-├── server.js          # Express app + REST API
+Accreditation Portal/
 ├── db/
-│   ├── schema.sql      # run once against your Postgres database
-│   └── pool.js         # pg connection pool
+│   ├── database.js     # Hybrid storage engine (Postgres + Zero-Config fallback)
+│   ├── pool.js         # Connection pool export
+│   ├── schema.sql      # Postgres DDL schema definition
+│   └── local_data.json # Persistent local storage & seed dataset
 ├── public/
-│   └── index.html      # the entire frontend (HTML+CSS+JS, no build step)
-├── package.json
-├── .env.example
-└── .gitignore
+│   ├── index.html      # Clean HTML5 entrypoint
+│   ├── css/
+│   │   └── style.css   # Modern responsive stylesheet + Dark/Light themes + Print styles
+│   └── js/
+│       └── app.js      # Frontend controller, live metrics, role simulator & modals
+├── server.js           # Express REST API, audit logger & analytics engine
+├── package.json        # Node manifest & scripts
+├── .env.example        # Environment variable template
+└── .gitignore          # Git ignore rules
 ```
-
-No build step, no framework — the frontend is one HTML file talking to a small REST API. Easy to hand to another developer, easy to extend one route/field at a time.
