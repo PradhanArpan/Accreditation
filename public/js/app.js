@@ -2245,31 +2245,6 @@ async function deleteRecord(collKey, id) {
   }
 }
 
-function exportCSV(collKey) {
-  const rows = state.data[collKey] || [];
-  if (rows.length === 0) {
-    showToast('No records available to export.', 'info');
-    return;
-  }
-  const cfg = CONFIG.collections[collKey];
-  const cols = cfg.fields.map(f => f.key);
-  
-  const header = cols.join(',');
-  const lines = rows.map(r => cols.map(c => {
-    const s = esc(r[c]).replace(/"/g, '""');
-    return /[",\n]/.test(s) ? `"${s}"` : s;
-  }).join(','));
-
-  const csvContent = [header].concat(lines).join('\n');
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `christ_civil_${collKey}_${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
 // ============================================================================
 // Event Binding & Main Lifecycle
 // ============================================================================
