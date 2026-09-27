@@ -4,6 +4,7 @@ const { Pool } = require('pg');
 require('dotenv').config();
 
 const DATA_FILE = path.join(__dirname, 'local_data.json');
+const BACKUP_FILE = path.join(__dirname, 'backup_data.json');
 
 // Master Default Store with full University > School > Department SaaS Hierarchy
 const DEFAULT_STORE = {
@@ -17,6 +18,76 @@ const DEFAULT_STORE = {
     iqac_coordinator: 'Dr. Ramesh Chandra',
     academic_year: '2026-27',
     updated_at: new Date().toISOString()
+  },
+  hierarchy: {
+    university: {
+      id: 'christ-uni',
+      name: 'CHRIST (Deemed to be University)',
+      campus: 'Bangalore Kengeri Campus',
+      iqac_director_name: 'Dr. Anil Kumar',
+      iqac_director_email: 'director.iqac@christuniversity.in',
+      drive_folder_id: '1Abc_CHRIST_Central_IQAC_Drive',
+      drive_folder_url: 'https://drive.google.com/drive/folders/1Abc_CHRIST_Central_IQAC_Drive'
+    },
+    schools: [
+      {
+        id: 'school-set',
+        name: 'School of Engineering and Technology',
+        dean_name: 'Dr. Iven Jose',
+        dean_email: 'dean.set@christuniversity.in',
+        drive_folder_id: '1Def_School_Engineering_Technology_Drive',
+        drive_folder_url: 'https://drive.google.com/drive/folders/1Def_School_Engineering_Technology_Drive',
+        departments: [
+          {
+            id: 'dept-civil',
+            name: 'Department of Civil Engineering',
+            hod_name: 'Dr. Joseph Kurian',
+            hod_email: 'joseph.kurian@christuniversity.in',
+            iqac_coordinator: 'Dr. Ramesh Chandra',
+            iqac_email: 'ramesh.chandra@christuniversity.in',
+            drive_folder_id: '1Ghi_Dept_Civil_Engineering_Drive',
+            drive_folder_url: 'https://drive.google.com/drive/folders/1Ghi_Dept_Civil_Engineering_Drive',
+            sheets: {
+              faculty: {
+                title: 'CHRIST_Civil_Faculty_Roster',
+                sheet_id: '1aBcD_Faculty_Sheet_CE',
+                sheet_url: 'https://docs.google.com/spreadsheets/d/1aBcD_Faculty_Sheet_CE/edit',
+                status: 'Connected',
+                last_synced: new Date().toISOString()
+              },
+              students: {
+                title: 'CHRIST_Civil_Students_Cohort',
+                sheet_id: '1eFgH_Students_Sheet_CE',
+                sheet_url: 'https://docs.google.com/spreadsheets/d/1eFgH_Students_Sheet_CE/edit',
+                status: 'Connected',
+                last_synced: new Date().toISOString()
+              },
+              infrastructure: {
+                title: 'CHRIST_Civil_Infrastructure_Labs',
+                sheet_id: '1iJkL_Infra_Sheet_CE',
+                sheet_url: 'https://docs.google.com/spreadsheets/d/1iJkL_Infra_Sheet_CE/edit',
+                status: 'Connected',
+                last_synced: new Date().toISOString()
+              },
+              research: {
+                title: 'CHRIST_Civil_Research_Grants',
+                sheet_id: '1mNoP_Research_Sheet_CE',
+                sheet_url: 'https://docs.google.com/spreadsheets/d/1mNoP_Research_Sheet_CE/edit',
+                status: 'Connected',
+                last_synced: new Date().toISOString()
+              },
+              events: {
+                title: 'CHRIST_Civil_Events_FDPs',
+                sheet_id: '1qRsT_Events_Sheet_CE',
+                sheet_url: 'https://docs.google.com/spreadsheets/d/1qRsT_Events_Sheet_CE/edit',
+                status: 'Connected',
+                last_synced: new Date().toISOString()
+              }
+            }
+          }
+        ]
+      }
+    ]
   },
   faculty: [
     {
@@ -443,31 +514,56 @@ let pgPool = null;
 let localStore = null;
 
 function loadLocalStore() {
+  let loaded = false;
+  // Try primary DATA_FILE first
   if (fs.existsSync(DATA_FILE)) {
     try {
       const content = fs.readFileSync(DATA_FILE, 'utf8');
       localStore = JSON.parse(content);
-      // Ensure all required domain tables exist
-      if (!localStore.institution) localStore.institution = { ...DEFAULT_STORE.institution };
-      if (!localStore.students) localStore.students = JSON.parse(JSON.stringify(DEFAULT_STORE.students));
-      if (!localStore.events) localStore.events = JSON.parse(JSON.stringify(DEFAULT_STORE.events));
-      if (!localStore.tasks) localStore.tasks = JSON.parse(JSON.stringify(DEFAULT_STORE.tasks));
+      loaded = true;
     } catch (err) {
-      console.warn('Re-initializing store:', err.message);
-      localStore = JSON.parse(JSON.stringify(DEFAULT_STORE));
-      saveLocalStore();
+      console.warn('Primary store read warning:', err.message);
     }
-  } else {
-    localStore = JSON.parse(JSON.stringify(DEFAULT_STORE));
-    saveLocalStore();
   }
+
+  // Fallback to BACKUP_FILE if primary was not loaded or empty
+  if (!loaded && fs.existsSync(BACKUP_FILE)) {
+    try {
+      const content = fs.readFileSync(BACKUP_FILE, 'utf8');
+      localStore = JSON.parse(content);
+      loaded = true;
+      console.log('Restored state from backup_data.json');
+    } catch (err) {
+      console.warn('Backup store read warning:', err.message);
+    }
+  }
+
+  if (!loaded || !localStore) {
+    localStore = JSON.parse(JSON.stringify(DEFAULT_STORE));
+  }
+
+  // Ensure all required domain collections and hierarchy exist
+  if (!localStore.institution) localStore.institution = { ...DEFAULT_STORE.institution };
+  if (!localStore.hierarchy) localStore.hierarchy = JSON.parse(JSON.stringify(DEFAULT_STORE.hierarchy));
+  if (!localStore.faculty) localStore.faculty = JSON.parse(JSON.stringify(DEFAULT_STORE.faculty));
+  if (!localStore.students) localStore.students = JSON.parse(JSON.stringify(DEFAULT_STORE.students));
+  if (!localStore.infrastructure) localStore.infrastructure = JSON.parse(JSON.stringify(DEFAULT_STORE.infrastructure));
+  if (!localStore.research) localStore.research = JSON.parse(JSON.stringify(DEFAULT_STORE.research));
+  if (!localStore.events) localStore.events = JSON.parse(JSON.stringify(DEFAULT_STORE.events));
+  if (!localStore.programs) localStore.programs = JSON.parse(JSON.stringify(DEFAULT_STORE.programs));
+  if (!localStore.tasks) localStore.tasks = JSON.parse(JSON.stringify(DEFAULT_STORE.tasks));
+  if (!localStore.profile) localStore.profile = { ...DEFAULT_STORE.profile };
+
+  saveLocalStore();
 }
 
 function saveLocalStore() {
   try {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(localStore, null, 2), 'utf8');
+    const jsonStr = JSON.stringify(localStore, null, 2);
+    fs.writeFileSync(DATA_FILE, jsonStr, 'utf8');
+    fs.writeFileSync(BACKUP_FILE, jsonStr, 'utf8');
   } catch (err) {
-    console.error('Error saving local_data.json:', err.message);
+    console.error('Error saving local_data.json / backup_data.json:', err.message);
   }
 }
 
@@ -929,6 +1025,7 @@ const db = {
   async getAllData() {
     return {
       institution: await this.getInstitution(),
+      hierarchy: await this.getHierarchy(),
       profile: await this.getComputedProfile(),
       faculty: await this.getCollection('faculty'),
       students: await this.getCollection('students'),
@@ -940,6 +1037,129 @@ const db = {
       audit_logs: await this.getAuditLogs(100),
       engine: usePostgres ? 'PostgreSQL' : 'Embedded Zero-Config JSON'
     };
+  },
+
+  async getHierarchy() {
+    if (!localStore.hierarchy) {
+      localStore.hierarchy = JSON.parse(JSON.stringify(DEFAULT_STORE.hierarchy));
+      saveLocalStore();
+    }
+    return localStore.hierarchy;
+  },
+
+  async updateHierarchy(newHierarchy) {
+    if (newHierarchy && typeof newHierarchy === 'object') {
+      localStore.hierarchy = newHierarchy;
+      saveLocalStore();
+    }
+    return localStore.hierarchy;
+  },
+
+  async addSchool(schoolData) {
+    if (!localStore.hierarchy) localStore.hierarchy = JSON.parse(JSON.stringify(DEFAULT_STORE.hierarchy));
+    const cleanSlug = (schoolData.name || 'school').toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 20);
+    const schoolId = 'school-' + cleanSlug + '-' + Math.floor(100 + Math.random() * 900);
+    const newSchool = {
+      id: schoolId,
+      name: schoolData.name || 'New School of Studies',
+      dean_name: schoolData.dean_name || 'Dean / Director',
+      dean_email: schoolData.dean_email || '',
+      drive_folder_id: `1_DRIVE_${schoolId.toUpperCase()}`,
+      drive_folder_url: `https://drive.google.com/drive/folders/CHRIST_${schoolId.toUpperCase()}`,
+      departments: []
+    };
+    localStore.hierarchy.schools.push(newSchool);
+    saveLocalStore();
+    return newSchool;
+  },
+
+  async addDepartment(schoolId, deptData) {
+    if (!localStore.hierarchy) localStore.hierarchy = JSON.parse(JSON.stringify(DEFAULT_STORE.hierarchy));
+    const school = (localStore.hierarchy.schools || []).find(s => s.id === schoolId);
+    if (!school) throw new Error('School not found: ' + schoolId);
+    if (!school.departments) school.departments = [];
+
+    const cleanSlug = (deptData.name || 'dept').toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 20);
+    const deptId = 'dept-' + cleanSlug + '-' + Math.floor(100 + Math.random() * 900);
+    const newDept = {
+      id: deptId,
+      name: deptData.name || 'New Department',
+      hod_name: deptData.hod_name || '',
+      hod_email: deptData.hod_email || '',
+      iqac_coordinator: deptData.iqac_coordinator || '',
+      iqac_email: deptData.iqac_email || '',
+      drive_folder_id: `1_DRIVE_${deptId.toUpperCase()}`,
+      drive_folder_url: `https://drive.google.com/drive/folders/CHRIST_${deptId.toUpperCase()}`,
+      sheets: {
+        faculty: {
+          title: `${deptData.name}_Faculty_Roster`,
+          sheet_id: `SHEET_${deptId}_FACULTY`,
+          sheet_url: `https://docs.google.com/spreadsheets/d/CHRIST_${deptId}_FACULTY/edit`,
+          status: 'Connected',
+          last_synced: new Date().toISOString()
+        },
+        students: {
+          title: `${deptData.name}_Students_Cohort`,
+          sheet_id: `SHEET_${deptId}_STUDENTS`,
+          sheet_url: `https://docs.google.com/spreadsheets/d/CHRIST_${deptId}_STUDENTS/edit`,
+          status: 'Connected',
+          last_synced: new Date().toISOString()
+        },
+        infrastructure: {
+          title: `${deptData.name}_Infrastructure_Labs`,
+          sheet_id: `SHEET_${deptId}_INFRA`,
+          sheet_url: `https://docs.google.com/spreadsheets/d/CHRIST_${deptId}_INFRA/edit`,
+          status: 'Connected',
+          last_synced: new Date().toISOString()
+        },
+        research: {
+          title: `${deptData.name}_Research_Grants`,
+          sheet_id: `SHEET_${deptId}_RESEARCH`,
+          sheet_url: `https://docs.google.com/spreadsheets/d/CHRIST_${deptId}_RESEARCH/edit`,
+          status: 'Connected',
+          last_synced: new Date().toISOString()
+        },
+        events: {
+          title: `${deptData.name}_Events_FDPs`,
+          sheet_id: `SHEET_${deptId}_EVENTS`,
+          sheet_url: `https://docs.google.com/spreadsheets/d/CHRIST_${deptId}_EVENTS/edit`,
+          status: 'Connected',
+          last_synced: new Date().toISOString()
+        }
+      }
+    };
+    school.departments.push(newDept);
+    saveLocalStore();
+    return newDept;
+  },
+
+  async updateDepartmentSheets(deptId, sheets) {
+    if (!localStore.hierarchy) localStore.hierarchy = JSON.parse(JSON.stringify(DEFAULT_STORE.hierarchy));
+    for (const school of localStore.hierarchy.schools || []) {
+      const dept = (school.departments || []).find(d => d.id === deptId);
+      if (dept) {
+        dept.sheets = { ...(dept.sheets || {}), ...sheets };
+        saveLocalStore();
+        return dept.sheets;
+      }
+    }
+    return null;
+  },
+
+  async syncAllState(fullState) {
+    if (!fullState || typeof fullState !== 'object') throw new Error('Invalid state payload');
+    if (fullState.institution) localStore.institution = fullState.institution;
+    if (fullState.hierarchy) localStore.hierarchy = fullState.hierarchy;
+    if (fullState.profile) localStore.profile = fullState.profile;
+    if (Array.isArray(fullState.faculty)) localStore.faculty = fullState.faculty;
+    if (Array.isArray(fullState.students)) localStore.students = fullState.students;
+    if (Array.isArray(fullState.infrastructure)) localStore.infrastructure = fullState.infrastructure;
+    if (Array.isArray(fullState.research)) localStore.research = fullState.research;
+    if (Array.isArray(fullState.events)) localStore.events = fullState.events;
+    if (Array.isArray(fullState.programs)) localStore.programs = fullState.programs;
+    if (Array.isArray(fullState.tasks)) localStore.tasks = fullState.tasks;
+    saveLocalStore();
+    return true;
   }
 };
 

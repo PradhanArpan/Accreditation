@@ -256,6 +256,311 @@ app.get('/health', async (req, res) => {
   });
 });
 
+// ============================================================================
+// GOOGLE AUTH & USER PERSONAS
+// ============================================================================
+const PERSONAS = [
+  {
+    role: 'director',
+    name: 'Dr. Anil Kumar',
+    email: 'director.iqac@christuniversity.in',
+    title: 'University IQAC Director',
+    level: 'University Central Management',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=AnilKumar&backgroundColor=0e355f'
+  },
+  {
+    role: 'dean',
+    name: 'Dr. Iven Jose',
+    email: 'dean.set@christuniversity.in',
+    title: 'Dean, School of Engineering and Technology',
+    level: 'School Level Leadership',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=IvenJose&backgroundColor=184a80'
+  },
+  {
+    role: 'iqac',
+    name: 'Dr. Ramesh Chandra',
+    email: 'ramesh.chandra@christuniversity.in',
+    title: 'HoD & Civil IQAC Coordinator',
+    level: 'Department Coordinator',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=RameshChandra&backgroundColor=c29b38'
+  },
+  {
+    role: 'faculty',
+    name: 'Dr. Priya V. Nair',
+    email: 'priya.nair@christuniversity.in',
+    title: 'Associate Professor (Geotechnical Engineering)',
+    level: 'Serving Faculty Member',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=PriyaNair&backgroundColor=265b68'
+  },
+  {
+    role: 'faculty',
+    name: 'Dr. Anand K. Murthy',
+    email: 'anand.murthy@christuniversity.in',
+    title: 'Assistant Professor (Water Resources)',
+    level: 'Serving Faculty Member',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=AnandMurthy&backgroundColor=265b68'
+  }
+];
+
+app.get('/api/auth/personas', (req, res) => {
+  res.json(PERSONAS);
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    const { email, name, role, photo_url } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+
+    let matchedRole = role || 'faculty';
+    let matchedName = name || email.split('@')[0];
+    let matchedAvatar = photo_url || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(matchedName)}`;
+
+    const existingPersona = PERSONAS.find(p => p.email.toLowerCase() === email.toLowerCase());
+    if (existingPersona) {
+      matchedRole = existingPersona.role;
+      matchedName = existingPersona.name;
+      matchedAvatar = existingPersona.avatar;
+    } else if (email.toLowerCase().includes('director') || email.toLowerCase().includes('iqac-uni')) {
+      matchedRole = 'director';
+    } else if (email.toLowerCase().includes('dean')) {
+      matchedRole = 'dean';
+    } else if (email.toLowerCase().includes('hod') || email.toLowerCase().includes('coordinator')) {
+      matchedRole = 'iqac';
+    }
+
+    const sessionUser = {
+      email,
+      name: matchedName,
+      role: matchedRole,
+      avatar: matchedAvatar,
+      institution: 'CHRIST (Deemed to be University)',
+      school: 'School of Engineering and Technology',
+      department: 'Department of Civil Engineering',
+      authenticated_at: new Date().toISOString()
+    };
+
+    await db.logAudit('USER_LOGIN', 'auth', email, matchedName, matchedRole, `Logged in via Google Authentication (${email})`);
+
+    res.json({
+      success: true,
+      token: 'jwt-google-' + Buffer.from(email).toString('base64'),
+      user: sessionUser
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Auth failed: ' + err.message });
+  }
+});
+
+// ============================================================================
+// HIERARCHY & GOOGLE DRIVE FOLDERS
+// ============================================================================
+app.get('/api/hierarchy', async (req, res) => {
+  try {
+    const hier = await db.getHierarchy();
+    res.json(hier);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/hierarchy/schools', async (req, res) => {
+  try {
+    const { actor, role } = extractActor(req);
+    const newSchool = await db.addSchool(req.body);
+    await db.logAudit('CREATE_SCHOOL_FOLDER', 'hierarchy', newSchool.id, actor, role, `Created School Drive Folder: ${newSchool.name}`);
+    res.status(201).json(newSchool);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/hierarchy/departments', async (req, res) => {
+  try {
+    const { actor, role } = extractActor(req);
+    const { schoolId, ...deptData } = req.body;
+    if (!schoolId) return res.status(400).json({ error: 'schoolId is required' });
+    const newDept = await db.addDepartment(schoolId, deptData);
+    await db.logAudit('CREATE_DEPT_FOLDER', 'hierarchy', newDept.id, actor, role, `Created Dept Drive Folder & Live Sheets: ${newDept.name}`);
+    res.status(201).json(newDept);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/hierarchy/departments/:deptId/sheets', async (req, res) => {
+  try {
+    const { actor, role } = extractActor(req);
+    const updated = await db.updateDepartmentSheets(req.params.deptId, req.body);
+    if (!updated) return res.status(404).json({ error: 'Department not found' });
+    await db.logAudit('UPDATE_DEPT_SHEETS', 'hierarchy', req.params.deptId, actor, role, `Updated linked Google Sheets URLs`);
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ============================================================================
+// LIVE GOOGLE SHEETS INTEGRATION & TWO-WAY SYNC
+// ============================================================================
+app.get('/api/sheets/open/:table', async (req, res) => {
+  const { table } = req.params;
+  const cfg = SCHEMA_CONFIG[table];
+  if (!cfg) return res.status(404).json({ error: 'Unknown table: ' + table });
+
+  try {
+    const hier = await db.getHierarchy();
+    const civilDept = hier.schools?.[0]?.departments?.find(d => d.id === 'dept-civil');
+    const linkedSheet = civilDept?.sheets?.[table];
+
+    const googleSheetCopyUrl = `https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/copy?usp=sharing`;
+    const liveUrl = linkedSheet?.sheet_url || `https://docs.google.com/spreadsheets/create?title=CHRIST_Civil_${table.toUpperCase()}`;
+
+    res.json({
+      table,
+      title: linkedSheet?.title || `CHRIST Civil ${cfg.name}`,
+      sheet_url: liveUrl,
+      template_copy_url: googleSheetCopyUrl,
+      fields: cfg.cols,
+      sample_data: cfg.sample
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/sheets/sync/:table', assertTable, async (req, res) => {
+  try {
+    const { actor, role } = extractActor(req);
+    const { table } = req.params;
+    const { sheet_url, records } = req.body;
+
+    let parsedRecords = [];
+
+    if (Array.isArray(records) && records.length > 0) {
+      parsedRecords = records;
+    } else if (sheet_url) {
+      let csvUrl = sheet_url;
+      const match = sheet_url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+      if (match) {
+        const sheetId = match[1];
+        csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+      }
+      try {
+        const fetchRes = await fetch(csvUrl, { headers: { 'User-Agent': 'Verita-Accreditation/1.0' } });
+        if (fetchRes.ok) {
+          const csvText = await fetchRes.text();
+          const wb = xlsx.read(csvText, { type: 'string' });
+          const firstSheet = wb.SheetNames[0];
+          parsedRecords = xlsx.utils.sheet_to_json(wb.Sheets[firstSheet]);
+        }
+      } catch (fetchErr) {
+        console.warn('Direct Google Sheet fetch warning:', fetchErr.message);
+      }
+    }
+
+    if (!parsedRecords || parsedRecords.length === 0) {
+      return res.status(400).json({
+        error: 'No data retrieved. Ensure the Google Sheet is shared with "Anyone with the link can view", or use direct cell sync.'
+      });
+    }
+
+    const cleaned = parsedRecords.map(raw => {
+      const rec = { status: 'Approved by IQAC', note: 'Synchronized live from Google Drive Sheet' };
+      Object.keys(raw).forEach(k => {
+        const val = raw[k];
+        const lowerKey = k.toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (table === 'faculty') {
+          if (lowerKey.includes('name')) rec.name = String(val).trim();
+          else if (lowerKey.includes('email')) rec.email = String(val).trim();
+          else if (lowerKey.includes('designation')) rec.designation = String(val).trim();
+          else if (lowerKey.includes('qualif')) rec.qualification = String(val).trim();
+          else if (lowerKey.includes('spec')) rec.specialization = String(val).trim();
+          else if (lowerKey.includes('exp')) rec.experience_years = Number(val) || 0;
+          else if (lowerKey.includes('cadre') || lowerKey.includes('employ')) rec.employment_type = String(val).trim();
+          else if (lowerKey.includes('service') || lowerKey.includes('serving')) rec.service_status = String(val).trim();
+          else if (lowerKey.includes('gender')) rec.gender = String(val).trim();
+          else if (lowerKey.includes('pub')) rec.publications_3yr = Number(val) || 0;
+          else if (lowerKey.includes('patent')) rec.patents = Number(val) || 0;
+          else if (lowerKey.includes('orcid') || lowerKey.includes('url')) rec.evidence_url = String(val).trim();
+        } else if (table === 'students') {
+          if (lowerKey.includes('roll') || lowerKey.includes('reg')) rec.roll_no = String(val).trim();
+          else if (lowerKey.includes('name')) rec.name = String(val).trim();
+          else if (lowerKey.includes('gender')) rec.gender = String(val).trim();
+          else if (lowerKey.includes('cat')) rec.category = String(val).trim();
+          else if (lowerKey.includes('state') || lowerKey.includes('country') || lowerKey.includes('domicile')) rec.state_country = String(val).trim();
+          else if (lowerKey.includes('pwd')) rec.is_pwd = String(val).toLowerCase().includes('yes');
+          else if (lowerKey.includes('prog')) rec.program = String(val).trim();
+          else if (lowerKey.includes('batch')) rec.batch_year = String(val).trim();
+          else if (lowerKey.includes('place')) rec.placement_status = String(val).trim();
+          else if (lowerKey.includes('high')) rec.higher_studies = String(val).trim();
+        } else if (table === 'infrastructure') {
+          if (lowerKey.includes('cat')) rec.category = String(val).trim();
+          else if (lowerKey.includes('name') || lowerKey.includes('room') || lowerKey.includes('facility')) rec.name = String(val).trim();
+          else if (lowerKey.includes('cap') || lowerKey.includes('area')) rec.capacity = String(val).trim();
+          else if (lowerKey.includes('equip')) rec.equipment_count = Number(val) || 0;
+          else if (lowerKey.includes('year') || lowerKey.includes('est')) rec.year_established = Number(val) || 0;
+          else if (lowerKey.includes('note') || lowerKey.includes('calib') || lowerKey.includes('nabl')) rec.evidence_note = String(val).trim();
+        } else if (table === 'research') {
+          if (lowerKey.includes('type')) rec.type = String(val).trim();
+          else if (lowerKey.includes('title') || lowerKey.includes('project')) rec.title = String(val).trim();
+          else if (lowerKey.includes('author') || lowerKey.includes('investig')) rec.authors = String(val).trim();
+          else if (lowerKey.includes('year')) rec.year = Number(val) || 0;
+          else if (lowerKey.includes('venue') || lowerKey.includes('journal') || lowerKey.includes('agency')) rec.venue = String(val).trim();
+          else if (lowerKey.includes('index')) rec.indexing = String(val).trim();
+          else if (lowerKey.includes('amount') || lowerKey.includes('inr') || lowerKey.includes('grant')) rec.amount_inr = Number(val) || null;
+          else if (lowerKey.includes('doi') || lowerKey.includes('url')) rec.evidence_url = String(val).trim();
+        } else if (table === 'events') {
+          if (lowerKey.includes('title')) rec.title = String(val).trim();
+          else if (lowerKey.includes('cat')) rec.category = String(val).trim();
+          else if (lowerKey.includes('coord')) rec.coordinator = String(val).trim();
+          else if (lowerKey.includes('start')) rec.start_date = String(val).trim();
+          else if (lowerKey.includes('end')) rec.end_date = String(val).trim();
+          else if (lowerKey.includes('partic')) rec.participants_count = Number(val) || 0;
+          else if (lowerKey.includes('venue')) rec.venue = String(val).trim();
+          else if (lowerKey.includes('url') || lowerKey.includes('report')) rec.evidence_url = String(val).trim();
+        }
+      });
+      return rec;
+    }).filter(r => r.name || r.title || r.roll_no);
+
+    const inserted = await db.bulkInsert(table, cleaned, 'replace');
+    await db.logAudit('GOOGLE_SHEET_SYNC', table, `${inserted.length} rows`, actor, role, `Synchronized ${inserted.length} rows directly from Google Sheet.`);
+
+    const computedProfile = await db.getComputedProfile();
+
+    res.json({
+      success: true,
+      synced_count: inserted.length,
+      profile: computedProfile
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Sync failed: ' + err.message });
+  }
+});
+
+// ============================================================================
+// STATE DURABILITY & CLIENT BACKUP SYNC
+// ============================================================================
+app.get('/api/sync/state', async (req, res) => {
+  try {
+    const all = await db.getAllData();
+    res.json(all);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/sync/state', async (req, res) => {
+  try {
+    const { actor, role } = extractActor(req);
+    await db.syncAllState(req.body);
+    await db.logAudit('STATE_RESTORE', 'system', 'all', actor, role, 'Restored complete department state from cloud backup.');
+    res.json({ success: true, message: 'State synced and persisted.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // --- Master Template Download (Excel .xlsx) ---
 app.get('/api/templates/master', (req, res) => {
   try {
