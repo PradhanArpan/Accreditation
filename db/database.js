@@ -9,77 +9,77 @@ const BACKUP_FILE = path.join(__dirname, 'backup_data.json');
 // Master Default Store with full University > School > Department SaaS Hierarchy
 const DEFAULT_STORE = {
   institution: {
-    university_name: 'CHRIST (Deemed to be University)',
-    campus: 'Bangalore Kengeri Campus',
+    university_name: 'Apex University',
+    campus: 'Main Academic Campus',
     naac_accreditation_cycle: 'Cycle 4 (A+ Grade)',
     school_name: 'School of Engineering and Technology',
     department_name: 'Department of Civil Engineering',
-    head_of_department: 'Dr. Joseph Kurian',
-    iqac_coordinator: 'Dr. Ramesh Chandra',
+    head_of_department: 'Dr. John Doe',
+    iqac_coordinator: 'Dr. Jane Smith',
     academic_year: '2026-27',
     updated_at: new Date().toISOString()
   },
   hierarchy: {
     university: {
-      id: 'christ-uni',
-      name: 'CHRIST (Deemed to be University)',
-      campus: 'Bangalore Kengeri Campus',
-      iqac_director_name: 'Dr. Anil Kumar',
-      iqac_director_email: 'director.iqac@christuniversity.in',
-      drive_folder_id: '1Abc_CHRIST_Central_IQAC_Drive',
-      drive_folder_url: 'https://drive.google.com/drive/folders/1Abc_CHRIST_Central_IQAC_Drive'
+      id: 'uni-main',
+      name: 'Apex University',
+      campus: 'Main Academic Campus',
+      iqac_director_name: 'Dr. Jane Smith',
+      iqac_director_email: 'director.iqac@university.edu',
+      drive_folder_id: 'DRIVE_ROOT_UNI',
+      drive_folder_url: 'https://drive.google.com/drive/my-drive'
     },
     schools: [
       {
         id: 'school-set',
         name: 'School of Engineering and Technology',
-        dean_name: 'Dr. Iven Jose',
-        dean_email: 'dean.set@christuniversity.in',
-        drive_folder_id: '1Def_School_Engineering_Technology_Drive',
-        drive_folder_url: 'https://drive.google.com/drive/folders/1Def_School_Engineering_Technology_Drive',
+        dean_name: 'Dr. Robert Taylor',
+        dean_email: 'dean.set@university.edu',
+        drive_folder_id: 'DRIVE_SCHOOL_SET',
+        drive_folder_url: 'https://drive.google.com/drive/my-drive',
         departments: [
           {
             id: 'dept-civil',
             name: 'Department of Civil Engineering',
-            hod_name: 'Dr. Joseph Kurian',
-            hod_email: 'joseph.kurian@christuniversity.in',
-            iqac_coordinator: 'Dr. Ramesh Chandra',
-            iqac_email: 'ramesh.chandra@christuniversity.in',
-            drive_folder_id: '1Ghi_Dept_Civil_Engineering_Drive',
-            drive_folder_url: 'https://drive.google.com/drive/folders/1Ghi_Dept_Civil_Engineering_Drive',
+            hod_name: 'Dr. John Doe',
+            hod_email: 'john.doe@university.edu',
+            iqac_coordinator: 'Dr. Jane Smith',
+            iqac_email: 'jane.smith@university.edu',
+            drive_folder_id: 'DRIVE_DEPT_CIVIL',
+            drive_folder_url: 'https://drive.google.com/drive/my-drive',
             sheets: {
               faculty: {
-                title: 'CHRIST_Civil_Faculty_Roster',
-                sheet_id: '1aBcD_Faculty_Sheet_CE',
-                sheet_url: 'https://docs.google.com/spreadsheets/d/1aBcD_Faculty_Sheet_CE/edit',
+                title: 'Civil_Faculty_Roster',
+                sheet_id: 'SHEET_CIVIL_FACULTY',
+                sheet_url: 'https://sheets.new',
                 status: 'Connected',
                 last_synced: new Date().toISOString()
               },
               students: {
-                title: 'CHRIST_Civil_Students_Cohort',
-                sheet_id: '1eFgH_Students_Sheet_CE',
-                sheet_url: 'https://docs.google.com/spreadsheets/d/1eFgH_Students_Sheet_CE/edit',
+                title: 'Civil_Students_Cohort',
+                sheet_id: 'SHEET_CIVIL_STUDENTS',
+                sheet_url: 'https://sheets.new',
                 status: 'Connected',
                 last_synced: new Date().toISOString()
               },
               infrastructure: {
-                title: 'CHRIST_Civil_Infrastructure_Labs',
-                sheet_id: '1iJkL_Infra_Sheet_CE',
-                sheet_url: 'https://docs.google.com/spreadsheets/d/1iJkL_Infra_Sheet_CE/edit',
+                title: 'Civil_Infrastructure_Labs',
+                sheet_id: 'SHEET_CIVIL_INFRA',
+                sheet_url: 'https://sheets.new',
                 status: 'Connected',
                 last_synced: new Date().toISOString()
               },
               research: {
-                title: 'CHRIST_Civil_Research_Grants',
-                sheet_id: '1mNoP_Research_Sheet_CE',
-                sheet_url: 'https://docs.google.com/spreadsheets/d/1mNoP_Research_Sheet_CE/edit',
+                title: 'Civil_Research_Grants',
+                sheet_id: 'SHEET_CIVIL_RESEARCH',
+                sheet_url: 'https://sheets.new',
                 status: 'Connected',
                 last_synced: new Date().toISOString()
               },
               events: {
-                title: 'CHRIST_Civil_Events_FDPs',
-                sheet_id: '1qRsT_Events_Sheet_CE',
-                sheet_url: 'https://docs.google.com/spreadsheets/d/1qRsT_Events_Sheet_CE/edit',
+                title: 'Civil_Events_FDPs',
+                sheet_id: 'SHEET_CIVIL_EVENTS',
+                sheet_url: 'https://sheets.new',
                 status: 'Connected',
                 last_synced: new Date().toISOString()
               }
@@ -92,8 +92,8 @@ const DEFAULT_STORE = {
   faculty: [
     {
       id: 1,
-      name: 'Dr. Ramesh Chandra',
-      email: 'ramesh.chandra@christuniversity.in',
+      name: 'Dr. John Doe',
+      email: 'john.doe@university.edu',
       designation: 'Professor',
       qualification: 'Ph.D.',
       specialization: 'Structural Engineering & Earthquake Resilient Design',
@@ -101,18 +101,18 @@ const DEFAULT_STORE = {
       employment_type: 'Regular',
       service_status: 'Current',
       gender: 'Male',
-      publications_3yr: 12,
+      publications_3yr: 14,
       patents: 2,
       status: 'Approved by IQAC',
       note: 'Verified against Scopus ID and Ph.D. certificate.',
-      evidence_url: 'https://orcid.org/0000-0002-1825-0097',
+      evidence_url: 'https://orcid.org',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     },
     {
       id: 2,
-      name: 'Dr. Priya V. Nair',
-      email: 'priya.nair@christuniversity.in',
+      name: 'Dr. Jane Smith',
+      email: 'jane.smith@university.edu',
       designation: 'Associate Professor',
       qualification: 'Ph.D.',
       specialization: 'Geotechnical & Geo-environmental Engineering',
@@ -120,37 +120,37 @@ const DEFAULT_STORE = {
       employment_type: 'Regular',
       service_status: 'Current',
       gender: 'Female',
-      publications_3yr: 8,
+      publications_3yr: 9,
       patents: 1,
       status: 'Approved by IQAC',
       note: 'AICTE 360 feedback verified.',
-      evidence_url: 'https://orcid.org/0000-0003-4512-8821',
+      evidence_url: 'https://orcid.org',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     },
     {
       id: 3,
-      name: 'Dr. Anand K. Murthy',
-      email: 'anand.murthy@christuniversity.in',
-      designation: 'Assistant Professor',
+      name: 'Dr. Robert Taylor',
+      email: 'robert.taylor@university.edu',
+      designation: 'Associate Professor',
       qualification: 'Ph.D.',
       specialization: 'Water Resources & Climate Change Modeling',
-      experience_years: 8,
+      experience_years: 11,
       employment_type: 'Regular',
       service_status: 'Current',
       gender: 'Male',
-      publications_3yr: 6,
+      publications_3yr: 7,
       patents: 1,
       status: 'Approved by IQAC',
-      note: 'Sponsored project PI for DST-SERB grant.',
-      evidence_url: 'https://orcid.org/0000-0001-9234-5510',
+      note: 'Sponsored project PI for research grant.',
+      evidence_url: 'https://orcid.org',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     },
     {
       id: 4,
-      name: 'Prof. Deepa S.',
-      email: 'deepa.s@christuniversity.in',
+      name: 'Prof. Alice Johnson',
+      email: 'alice.johnson@university.edu',
       designation: 'Assistant Professor',
       qualification: 'M.Tech / M.E.',
       specialization: 'Transportation Systems & Smart Urban Mobility',
@@ -168,8 +168,8 @@ const DEFAULT_STORE = {
     },
     {
       id: 5,
-      name: 'Dr. Joseph Kurian',
-      email: 'joseph.kurian@christuniversity.in',
+      name: 'Dr. Michael Brown',
+      email: 'michael.brown@university.edu',
       designation: 'Professor',
       qualification: 'Ph.D.',
       specialization: 'Environmental Engineering & Sustainable Concrete',
@@ -177,11 +177,11 @@ const DEFAULT_STORE = {
       employment_type: 'Regular',
       service_status: 'Current',
       gender: 'Male',
-      publications_3yr: 15,
+      publications_3yr: 16,
       patents: 3,
       status: 'Approved by IQAC',
       note: 'Head of Department; verified.',
-      evidence_url: 'https://orcid.org/0000-0002-7719-3321',
+      evidence_url: 'https://orcid.org',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     }
@@ -454,19 +454,19 @@ const DEFAULT_STORE = {
     {
       id: 1,
       title: 'Upload Course Outcome (CO) Attainment Sheets for Odd Semester 2025-26',
-      assigned_to_email: 'ramesh.chandra@christuniversity.in',
-      assigned_to_name: 'Dr. Ramesh Chandra',
+      assigned_to_email: 'john.doe@university.edu',
+      assigned_to_name: 'Dr. John Doe',
       course_code: 'CIV301 - Design of Reinforced Concrete',
       due_date: '2026-10-15',
       status: 'Completed',
-      submission_url: 'https://drive.google.com/christ/civ301/co-po-attainment.pdf',
+      submission_url: 'https://drive.google.com/drive/my-drive',
       remarks: 'Direct attainment computed at 86.4%. Verified by PAC.'
     },
     {
       id: 2,
       title: 'Submit NABL Calibration Certificates for Geotechnical Triaxial Cell',
-      assigned_to_email: 'priya.nair@christuniversity.in',
-      assigned_to_name: 'Dr. Priya V. Nair',
+      assigned_to_email: 'jane.smith@university.edu',
+      assigned_to_name: 'Dr. Jane Smith',
       course_code: 'LAB-CE102',
       due_date: '2026-10-20',
       status: 'In Progress',
@@ -476,8 +476,8 @@ const DEFAULT_STORE = {
     {
       id: 3,
       title: 'Update Scopus Author Profile & File Q1 Journal Paper Reprints',
-      assigned_to_email: 'anand.murthy@christuniversity.in',
-      assigned_to_name: 'Dr. Anand K. Murthy',
+      assigned_to_email: 'robert.taylor@university.edu',
+      assigned_to_name: 'Dr. Robert Taylor',
       course_code: 'RES-CE-2025',
       due_date: '2026-10-30',
       status: 'Pending',
@@ -503,7 +503,7 @@ const DEFAULT_STORE = {
       entity_id: '1',
       actor: 'System Administrator',
       role: 'admin',
-      details: 'Portal hierarchy established: CHRIST (Deemed to be University) > School of Engineering and Technology > Department of Civil Engineering.',
+      details: 'Portal hierarchy established: Apex University > School of Engineering and Technology > Department of Civil Engineering.',
       timestamp: new Date().toISOString()
     }
   ]
@@ -553,6 +553,35 @@ function loadLocalStore() {
   if (!localStore.programs) localStore.programs = JSON.parse(JSON.stringify(DEFAULT_STORE.programs));
   if (!localStore.tasks) localStore.tasks = JSON.parse(JSON.stringify(DEFAULT_STORE.tasks));
   if (!localStore.profile) localStore.profile = { ...DEFAULT_STORE.profile };
+
+  // Auto-sanitize legacy hardcoded defaults & ensure valid working Drive URLs
+  if (localStore.institution && localStore.institution.university_name && localStore.institution.university_name.includes('CHRIST')) {
+    localStore.institution.university_name = 'Apex University';
+    localStore.institution.head_of_department = 'Dr. John Doe';
+    localStore.institution.iqac_coordinator = 'Dr. Jane Smith';
+  }
+  if (localStore.hierarchy && localStore.hierarchy.university && localStore.hierarchy.university.name && localStore.hierarchy.university.name.includes('CHRIST')) {
+    localStore.hierarchy.university.name = 'Apex University';
+  }
+  if (localStore.hierarchy) {
+    if (localStore.hierarchy.university && (!localStore.hierarchy.university.drive_folder_url || localStore.hierarchy.university.drive_folder_url.includes('1Abc_CHRIST') || localStore.hierarchy.university.drive_folder_url.includes('folders/CHRIST'))) {
+      localStore.hierarchy.university.drive_folder_url = 'https://drive.google.com/drive/my-drive';
+    }
+    if (Array.isArray(localStore.hierarchy.schools)) {
+      for (const s of localStore.hierarchy.schools) {
+        if (!s.drive_folder_url || s.drive_folder_url.includes('1Def_School') || s.drive_folder_url.includes('folders/CHRIST')) {
+          s.drive_folder_url = 'https://drive.google.com/drive/my-drive';
+        }
+        if (Array.isArray(s.departments)) {
+          for (const d of s.departments) {
+            if (!d.drive_folder_url || d.drive_folder_url.includes('1Ghi_Dept') || d.drive_folder_url.includes('folders/CHRIST')) {
+              d.drive_folder_url = 'https://drive.google.com/drive/my-drive';
+            }
+          }
+        }
+      }
+    }
+  }
 
   saveLocalStore();
 }
@@ -1065,7 +1094,7 @@ const db = {
       dean_name: schoolData.dean_name || 'Dean / Director',
       dean_email: schoolData.dean_email || '',
       drive_folder_id: `1_DRIVE_${schoolId.toUpperCase()}`,
-      drive_folder_url: `https://drive.google.com/drive/folders/CHRIST_${schoolId.toUpperCase()}`,
+      drive_folder_url: schoolData.drive_folder_url || 'https://drive.google.com/drive/my-drive',
       departments: []
     };
     localStore.hierarchy.schools.push(newSchool);
@@ -1089,41 +1118,41 @@ const db = {
       iqac_coordinator: deptData.iqac_coordinator || '',
       iqac_email: deptData.iqac_email || '',
       drive_folder_id: `1_DRIVE_${deptId.toUpperCase()}`,
-      drive_folder_url: `https://drive.google.com/drive/folders/CHRIST_${deptId.toUpperCase()}`,
+      drive_folder_url: deptData.drive_folder_url || 'https://drive.google.com/drive/my-drive',
       sheets: {
         faculty: {
           title: `${deptData.name}_Faculty_Roster`,
           sheet_id: `SHEET_${deptId}_FACULTY`,
-          sheet_url: `https://docs.google.com/spreadsheets/d/CHRIST_${deptId}_FACULTY/edit`,
-          status: 'Connected',
+          sheet_url: 'https://sheets.new',
+          status: 'Ready',
           last_synced: new Date().toISOString()
         },
         students: {
           title: `${deptData.name}_Students_Cohort`,
           sheet_id: `SHEET_${deptId}_STUDENTS`,
-          sheet_url: `https://docs.google.com/spreadsheets/d/CHRIST_${deptId}_STUDENTS/edit`,
-          status: 'Connected',
+          sheet_url: 'https://sheets.new',
+          status: 'Ready',
           last_synced: new Date().toISOString()
         },
         infrastructure: {
           title: `${deptData.name}_Infrastructure_Labs`,
           sheet_id: `SHEET_${deptId}_INFRA`,
-          sheet_url: `https://docs.google.com/spreadsheets/d/CHRIST_${deptId}_INFRA/edit`,
-          status: 'Connected',
+          sheet_url: 'https://sheets.new',
+          status: 'Ready',
           last_synced: new Date().toISOString()
         },
         research: {
           title: `${deptData.name}_Research_Grants`,
           sheet_id: `SHEET_${deptId}_RESEARCH`,
-          sheet_url: `https://docs.google.com/spreadsheets/d/CHRIST_${deptId}_RESEARCH/edit`,
-          status: 'Connected',
+          sheet_url: 'https://sheets.new',
+          status: 'Ready',
           last_synced: new Date().toISOString()
         },
         events: {
           title: `${deptData.name}_Events_FDPs`,
           sheet_id: `SHEET_${deptId}_EVENTS`,
-          sheet_url: `https://docs.google.com/spreadsheets/d/CHRIST_${deptId}_EVENTS/edit`,
-          status: 'Connected',
+          sheet_url: 'https://sheets.new',
+          status: 'Ready',
           last_synced: new Date().toISOString()
         }
       }
@@ -1131,6 +1160,83 @@ const db = {
     school.departments.push(newDept);
     saveLocalStore();
     return newDept;
+  },
+
+  async updateDriveFolderLink(level, targetId, folderUrl) {
+    if (!localStore.hierarchy) localStore.hierarchy = JSON.parse(JSON.stringify(DEFAULT_STORE.hierarchy));
+    const cleanUrl = folderUrl && folderUrl.trim() ? folderUrl.trim() : 'https://drive.google.com/drive/my-drive';
+    if (level === 'university' || targetId === 'uni-main') {
+      if (!localStore.hierarchy.university) localStore.hierarchy.university = { ...DEFAULT_STORE.hierarchy.university };
+      localStore.hierarchy.university.drive_folder_url = cleanUrl;
+    } else if (level === 'school') {
+      for (const s of localStore.hierarchy.schools || []) {
+        if (s.id === targetId || !targetId) {
+          s.drive_folder_url = cleanUrl;
+          break;
+        }
+      }
+    } else {
+      // department
+      for (const s of localStore.hierarchy.schools || []) {
+        for (const d of s.departments || []) {
+          if (d.id === targetId || !targetId) {
+            d.drive_folder_url = cleanUrl;
+            break;
+          }
+        }
+      }
+    }
+    saveLocalStore();
+    return localStore.hierarchy;
+  },
+
+  async updateInstitutionAndProfile(data = {}) {
+    if (!localStore.institution) localStore.institution = { ...DEFAULT_STORE.institution };
+    if (!localStore.hierarchy) localStore.hierarchy = JSON.parse(JSON.stringify(DEFAULT_STORE.hierarchy));
+
+    if (data.university_name) {
+      localStore.institution.university_name = data.university_name.trim();
+      if (localStore.hierarchy.university) localStore.hierarchy.university.name = data.university_name.trim();
+    }
+    if (data.school_name) {
+      localStore.institution.school_name = data.school_name.trim();
+      if (localStore.hierarchy.schools && localStore.hierarchy.schools[0]) {
+        localStore.hierarchy.schools[0].name = data.school_name.trim();
+      }
+    }
+    if (data.department_name) {
+      localStore.institution.department_name = data.department_name.trim();
+      if (localStore.hierarchy.schools && localStore.hierarchy.schools[0] && localStore.hierarchy.schools[0].departments && localStore.hierarchy.schools[0].departments[0]) {
+        localStore.hierarchy.schools[0].departments[0].name = data.department_name.trim();
+      }
+    }
+    if (data.head_of_department) {
+      localStore.institution.head_of_department = data.head_of_department.trim();
+      if (localStore.hierarchy.schools && localStore.hierarchy.schools[0] && localStore.hierarchy.schools[0].departments && localStore.hierarchy.schools[0].departments[0]) {
+        localStore.hierarchy.schools[0].departments[0].hod_name = data.head_of_department.trim();
+      }
+    }
+    if (data.iqac_coordinator) {
+      localStore.institution.iqac_coordinator = data.iqac_coordinator.trim();
+      if (localStore.hierarchy.schools && localStore.hierarchy.schools[0] && localStore.hierarchy.schools[0].departments && localStore.hierarchy.schools[0].departments[0]) {
+        localStore.hierarchy.schools[0].departments[0].iqac_coordinator = data.iqac_coordinator.trim();
+      }
+    }
+    if (data.drive_folder_url) {
+      const cleanDrive = data.drive_folder_url.trim();
+      if (cleanDrive) {
+        if (localStore.hierarchy.university) localStore.hierarchy.university.drive_folder_url = cleanDrive;
+        if (localStore.hierarchy.schools && localStore.hierarchy.schools[0]) {
+          localStore.hierarchy.schools[0].drive_folder_url = cleanDrive;
+          if (localStore.hierarchy.schools[0].departments && localStore.hierarchy.schools[0].departments[0]) {
+            localStore.hierarchy.schools[0].departments[0].drive_folder_url = cleanDrive;
+          }
+        }
+      }
+    }
+    localStore.institution.updated_at = new Date().toISOString();
+    saveLocalStore();
+    return { institution: localStore.institution, hierarchy: localStore.hierarchy };
   },
 
   async updateDepartmentSheets(deptId, sheets) {

@@ -24,8 +24,8 @@ const SCHEMA_CONFIG = {
     cols: ['name', 'email', 'designation', 'qualification', 'specialization', 'experience_years', 'employment_type', 'service_status', 'gender', 'publications_3yr', 'patents', 'evidence_url'],
     sample: [
       {
-        'Full Name (with Title)': 'Dr. Ramesh Chandra',
-        'Official Email': 'ramesh.chandra@christuniversity.in',
+        'Full Name (with Title)': 'Dr. John Doe',
+        'Official Email': 'john.doe@university.edu',
         'Designation': 'Professor',
         'Highest Qualification': 'Ph.D.',
         'Area of Specialization': 'Structural Engineering & Earthquake Resilient Design',
@@ -33,13 +33,13 @@ const SCHEMA_CONFIG = {
         'Employment Cadre': 'Regular',
         'Service Status (Current/Relieved)': 'Current',
         'Gender (Male/Female/Other)': 'Male',
-        'Publications Last 3 Yrs': 12,
+        'Publications Last 3 Yrs': 14,
         'Patents Count': 2,
-        'ORCID / Profile URL': 'https://orcid.org/0000-0002-1825-0097'
+        'ORCID / Profile URL': 'https://orcid.org'
       },
       {
-        'Full Name (with Title)': 'Dr. Priya V. Nair',
-        'Official Email': 'priya.nair@christuniversity.in',
+        'Full Name (with Title)': 'Dr. Jane Smith',
+        'Official Email': 'jane.smith@university.edu',
         'Designation': 'Associate Professor',
         'Highest Qualification': 'Ph.D.',
         'Area of Specialization': 'Geotechnical & Geo-environmental Engineering',
@@ -47,9 +47,9 @@ const SCHEMA_CONFIG = {
         'Employment Cadre': 'Regular',
         'Service Status (Current/Relieved)': 'Current',
         'Gender (Male/Female/Other)': 'Female',
-        'Publications Last 3 Yrs': 8,
+        'Publications Last 3 Yrs': 9,
         'Patents Count': 1,
-        'ORCID / Profile URL': 'https://orcid.org/0000-0003-4512-8821'
+        'ORCID / Profile URL': 'https://orcid.org'
       }
     ]
   },
@@ -170,12 +170,12 @@ const SCHEMA_CONFIG = {
     sample: [
       {
         'Task Title': 'Upload Course Outcome (CO) Attainment Sheet',
-        'Assigned Faculty Email': 'ramesh.chandra@christuniversity.in',
-        'Faculty Name': 'Dr. Ramesh Chandra',
+        'Assigned Faculty Email': 'john.doe@university.edu',
+        'Faculty Name': 'Dr. John Doe',
         'Course Code / Module': 'CIV301 - Design of RC Structures',
         'Due Date (YYYY-MM-DD)': '2026-10-15',
         'Status (Pending/In Progress/Completed)': 'Pending',
-        'Submission Link': '',
+        'Submission Link': 'https://drive.google.com/drive/my-drive',
         'Coordinator Remarks': 'Ensure direct and indirect attainment formulas are mapped.'
       }
     ]
@@ -257,48 +257,49 @@ app.get('/health', async (req, res) => {
 });
 
 // ============================================================================
+// ============================================================================
 // GOOGLE AUTH & USER PERSONAS
 // ============================================================================
 const PERSONAS = [
   {
     role: 'director',
-    name: 'Dr. Anil Kumar',
-    email: 'director.iqac@christuniversity.in',
+    name: 'Dr. Jane Smith',
+    email: 'director.iqac@university.edu',
     title: 'University IQAC Director',
     level: 'University Central Management',
-    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=AnilKumar&backgroundColor=0e355f'
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=JaneSmith&backgroundColor=0e355f'
   },
   {
     role: 'dean',
-    name: 'Dr. Iven Jose',
-    email: 'dean.set@christuniversity.in',
+    name: 'Dr. Robert Taylor',
+    email: 'dean.set@university.edu',
     title: 'Dean, School of Engineering and Technology',
     level: 'School Level Leadership',
-    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=IvenJose&backgroundColor=184a80'
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=RobertTaylor&backgroundColor=184a80'
   },
   {
     role: 'iqac',
-    name: 'Dr. Ramesh Chandra',
-    email: 'ramesh.chandra@christuniversity.in',
-    title: 'HoD & Civil IQAC Coordinator',
+    name: 'Dr. John Doe',
+    email: 'john.doe@university.edu',
+    title: 'HoD & Department IQAC Coordinator',
     level: 'Department Coordinator',
-    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=RameshChandra&backgroundColor=c29b38'
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=JohnDoe&backgroundColor=c29b38'
   },
   {
     role: 'faculty',
-    name: 'Dr. Priya V. Nair',
-    email: 'priya.nair@christuniversity.in',
-    title: 'Associate Professor (Geotechnical Engineering)',
+    name: 'Prof. Alice Johnson',
+    email: 'alice.johnson@university.edu',
+    title: 'Assistant Professor (Transportation Systems)',
     level: 'Serving Faculty Member',
-    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=PriyaNair&backgroundColor=265b68'
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=AliceJohnson&backgroundColor=265b68'
   },
   {
     role: 'faculty',
-    name: 'Dr. Anand K. Murthy',
-    email: 'anand.murthy@christuniversity.in',
-    title: 'Assistant Professor (Water Resources)',
+    name: 'Dr. Michael Brown',
+    email: 'michael.brown@university.edu',
+    title: 'Professor (Environmental Engineering)',
     level: 'Serving Faculty Member',
-    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=AnandMurthy&backgroundColor=265b68'
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=MichaelBrown&backgroundColor=265b68'
   }
 ];
 
@@ -308,7 +309,7 @@ app.get('/api/auth/personas', (req, res) => {
 
 app.post('/api/auth/login', async (req, res) => {
   try {
-    const { email, name, role, photo_url } = req.body;
+    const { email, name, role, photo_url, university_name, school_name, department_name, drive_folder_url } = req.body;
     if (!email) return res.status(400).json({ error: 'Email is required' });
 
     let matchedRole = role || 'faculty';
@@ -316,38 +317,67 @@ app.post('/api/auth/login', async (req, res) => {
     let matchedAvatar = photo_url || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(matchedName)}`;
 
     const existingPersona = PERSONAS.find(p => p.email.toLowerCase() === email.toLowerCase());
-    if (existingPersona) {
-      matchedRole = existingPersona.role;
+    if (existingPersona && !name) {
+      matchedRole = role || existingPersona.role;
       matchedName = existingPersona.name;
       matchedAvatar = existingPersona.avatar;
     } else if (email.toLowerCase().includes('director') || email.toLowerCase().includes('iqac-uni')) {
-      matchedRole = 'director';
+      matchedRole = role || 'director';
     } else if (email.toLowerCase().includes('dean')) {
-      matchedRole = 'dean';
+      matchedRole = role || 'dean';
     } else if (email.toLowerCase().includes('hod') || email.toLowerCase().includes('coordinator')) {
-      matchedRole = 'iqac';
+      matchedRole = role || 'iqac';
     }
+
+    const currentInst = await db.getInstitution();
+    const finalUniversity = (university_name && university_name.trim()) || currentInst.university_name || 'Apex University';
+    const finalSchool = (school_name && school_name.trim()) || currentInst.school_name || 'School of Engineering and Technology';
+    const finalDepartment = (department_name && department_name.trim()) || currentInst.department_name || 'Department of Civil Engineering';
+    const finalDriveUrl = (drive_folder_url && drive_folder_url.trim()) || 'https://drive.google.com/drive/my-drive';
+
+    // Update institution and hierarchy immediately so the whole portal reflects the login details!
+    const updated = await db.updateInstitutionAndProfile({
+      university_name: finalUniversity,
+      school_name: finalSchool,
+      department_name: finalDepartment,
+      head_of_department: matchedRole === 'iqac' ? matchedName : currentInst.head_of_department,
+      iqac_coordinator: matchedRole === 'iqac' ? matchedName : currentInst.iqac_coordinator,
+      drive_folder_url: finalDriveUrl
+    });
 
     const sessionUser = {
       email,
       name: matchedName,
       role: matchedRole,
       avatar: matchedAvatar,
-      institution: 'CHRIST (Deemed to be University)',
-      school: 'School of Engineering and Technology',
-      department: 'Department of Civil Engineering',
+      institution: finalUniversity,
+      school: finalSchool,
+      department: finalDepartment,
+      drive_folder_url: finalDriveUrl,
       authenticated_at: new Date().toISOString()
     };
 
-    await db.logAudit('USER_LOGIN', 'auth', email, matchedName, matchedRole, `Logged in via Google Authentication (${email})`);
+    await db.logAudit('USER_LOGIN', 'auth', email, matchedName, matchedRole, `Logged in as ${matchedName} (${matchedRole}) for ${finalDepartment}`);
 
     res.json({
       success: true,
       token: 'jwt-google-' + Buffer.from(email).toString('base64'),
-      user: sessionUser
+      user: sessionUser,
+      institution: updated.institution,
+      hierarchy: updated.hierarchy
     });
   } catch (err) {
     res.status(500).json({ error: 'Auth failed: ' + err.message });
+  }
+});
+
+// Update profile / institution information on the fly
+app.put('/api/institution/profile', async (req, res) => {
+  try {
+    const updated = await db.updateInstitutionAndProfile(req.body);
+    res.json({ success: true, institution: updated.institution, hierarchy: updated.hierarchy });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -358,6 +388,17 @@ app.get('/api/hierarchy', async (req, res) => {
   try {
     const hier = await db.getHierarchy();
     res.json(hier);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/hierarchy/folder-link', async (req, res) => {
+  try {
+    const { level, targetId, folder_url } = req.body;
+    if (!folder_url) return res.status(400).json({ error: 'folder_url is required' });
+    const updatedHierarchy = await db.updateDriveFolderLink(level, targetId, folder_url);
+    res.json({ success: true, hierarchy: updatedHierarchy });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -409,15 +450,19 @@ app.get('/api/sheets/open/:table', async (req, res) => {
 
   try {
     const hier = await db.getHierarchy();
-    const civilDept = hier.schools?.[0]?.departments?.find(d => d.id === 'dept-civil');
+    const inst = await db.getInstitution();
+    const deptPrefix = (inst.department_name || 'Academic').replace(/[^a-zA-Z0-9]/g, '_');
+    const defaultSheetTitle = `${deptPrefix}_${table.toUpperCase()}`;
+
+    const civilDept = hier.schools?.[0]?.departments?.find(d => d.id === 'dept-civil') || hier.schools?.[0]?.departments?.[0];
     const linkedSheet = civilDept?.sheets?.[table];
 
     const googleSheetCopyUrl = `https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/copy?usp=sharing`;
-    const liveUrl = linkedSheet?.sheet_url || `https://docs.google.com/spreadsheets/create?title=CHRIST_Civil_${table.toUpperCase()}`;
+    const liveUrl = linkedSheet?.sheet_url || `https://docs.google.com/spreadsheets/create?title=${encodeURIComponent(defaultSheetTitle)}`;
 
     res.json({
       table,
-      title: linkedSheet?.title || `CHRIST Civil ${cfg.name}`,
+      title: linkedSheet?.title || `${inst.department_name || 'Department'} ${cfg.name}`,
       sheet_url: liveUrl,
       template_copy_url: googleSheetCopyUrl,
       fields: cfg.cols,
@@ -456,9 +501,11 @@ app.post('/api/sheets/account-link', async (req, res) => {
     if (!email || !table || !sheet_url) {
       return res.status(400).json({ error: 'email, table, and sheet_url are required' });
     }
+    const inst = await db.getInstitution();
+    const deptPrefix = (inst.department_name || 'Academic').replace(/[^a-zA-Z0-9]/g, '_');
     await db.updateDepartmentSheets('dept-civil', {
       [table]: {
-        title: `CHRIST_Civil_${table.toUpperCase()}`,
+        title: `${deptPrefix}_${table.toUpperCase()}`,
         sheet_url,
         account_email: email,
         last_synced: new Date().toISOString()
@@ -608,7 +655,7 @@ app.get('/api/templates/master', (req, res) => {
   try {
     const buffer = generateMasterWorkbookBuffer();
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', 'attachment; filename=CHRIST_Civil_Accreditation_Master_Template.xlsx');
+    res.setHeader('Content-Disposition', 'attachment; filename=Accreditation_Master_Template.xlsx');
     res.setHeader('Content-Length', buffer.length);
     res.send(buffer);
   } catch (err) {
@@ -631,13 +678,13 @@ app.get('/api/templates/:table', (req, res) => {
   if (format === 'csv') {
     const csv = xlsx.utils.sheet_to_csv(ws);
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename=TEMPLATE_CHRIST_${table.toUpperCase()}.csv`);
+    res.setHeader('Content-Disposition', `attachment; filename=TEMPLATE_${table.toUpperCase()}.csv`);
     return res.send(csv);
   }
 
   const buffer = xlsx.write(wb, { type: 'buffer', bookType: 'xlsx' });
   res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-  res.setHeader('Content-Disposition', `attachment; filename=TEMPLATE_CHRIST_${table.toUpperCase()}.xlsx`);
+  res.setHeader('Content-Disposition', `attachment; filename=TEMPLATE_${table.toUpperCase()}.xlsx`);
   res.setHeader('Content-Length', buffer.length);
   res.send(buffer);
 });
@@ -960,7 +1007,7 @@ app.post('/api/dataset/load-sample', async (req, res) => {
   try {
     const { actor, role } = extractActor(req);
     await db.loadSampleDataset();
-    await db.logAudit('LOAD_SAMPLE', 'all_collections', 'sample', actor, role, 'Loaded CHRIST Civil Eng dataset.');
+    await db.logAudit('LOAD_SAMPLE', 'all_collections', 'sample', actor, role, 'Loaded baseline academic accreditation dataset.');
     res.json({ success: true, message: 'Sample dataset loaded.' });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -981,7 +1028,7 @@ app.get('/api/export-all', async (req, res) => {
   try {
     const allData = await db.getAllData();
     res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Content-Disposition', `attachment; filename=christ_accreditation_master_backup_${new Date().toISOString().slice(0,10)}.json`);
+    res.setHeader('Content-Disposition', `attachment; filename=accreditation_master_backup_${new Date().toISOString().slice(0,10)}.json`);
     res.json(allData);
   } catch (e) {
     res.status(500).json({ error: e.message });

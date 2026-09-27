@@ -61,8 +61,8 @@ const CONFIG = {
       sheetKey: 'faculty',
       consumers: 'NAAC SSR (Criterion 2) · NBA SAR (Criterion 5) · NIRF (TLR/FQE/FSR) · AICTE Mandatory Disclosure',
       fields: [
-        { key: 'name', label: 'Full Name (with Title)', type: 'text', req: true, placeholder: 'e.g. Dr. Ramesh Chandra' },
-        { key: 'email', label: 'Official Email (Login Identifier)', type: 'text', req: true, placeholder: 'ramesh.chandra@christuniversity.in' },
+        { key: 'name', label: 'Full Name (with Title)', type: 'text', req: true, placeholder: 'e.g. Dr. John Doe' },
+        { key: 'email', label: 'Official Email (Login Identifier)', type: 'text', req: true, placeholder: 'john.doe@university.edu' },
         { key: 'designation', label: 'Designation', type: 'select', options: ['Professor', 'Associate Professor', 'Assistant Professor', 'Adjunct / Visiting Professor'] },
         { key: 'qualification', label: 'Highest Qualification', type: 'select', options: ['Ph.D.', 'M.Tech / M.E.', 'M.Sc.', 'B.Tech / B.E.', 'Other'] },
         { key: 'specialization', label: 'Area of Specialization', type: 'text', placeholder: 'e.g. Structural Engineering & Dynamics' },
@@ -82,16 +82,16 @@ const CONFIG = {
       consumers: 'NAAC Extended Profile · NIRF Outreach & Inclusivity (OI) · AICTE Enrollment Roster',
       fields: [
         { key: 'roll_no', label: 'Registration / Roll Number', type: 'text', req: true, placeholder: 'e.g. 23BCIV001' },
-        { key: 'name', label: 'Full Student Name', type: 'text', req: true, placeholder: 'e.g. Aditi Sharma' },
+        { key: 'name', label: 'Full Student Name', type: 'text', req: true, placeholder: 'e.g. Alex Morgan' },
         { key: 'gender', label: 'Gender', type: 'select', options: ['Female', 'Male', 'Other'] },
         { key: 'category', label: 'Social Category', type: 'select', options: ['General', 'OBC', 'SC', 'ST', 'EWS'] },
-        { key: 'state_country', label: 'Domicile State / Country', type: 'text', placeholder: 'e.g. Karnataka / Delhi / Nepal' },
+        { key: 'state_country', label: 'Domicile State / Country', type: 'text', placeholder: 'e.g. California / Delhi / Ontario' },
         { key: 'is_pwd', label: 'Divyangjan (Person with Disability - PwD)', type: 'checkbox' },
         { key: 'program', label: 'Enrolled Program', type: 'select', options: ['B.Tech in Civil Engineering', 'M.Tech in Structural Engineering', 'Ph.D. in Civil Engineering'] },
         { key: 'batch_year', label: 'Batch / Cohort Year', type: 'text', placeholder: 'e.g. 2023-27' },
         { key: 'status', label: 'Enrollment Status', type: 'select', options: ['Active', 'Graduated', 'Detained'] },
-        { key: 'placement_status', label: 'Placement / Progression Status', type: 'text', placeholder: 'e.g. Placed (L&T - 7.2 LPA)' },
-        { key: 'higher_studies', label: 'Higher Studies / Competitive Exam', type: 'text', placeholder: 'e.g. GATE Qualified / GRE' },
+        { key: 'placement_status', label: 'Placement / Progression Status', type: 'text', placeholder: 'e.g. Placed (Infrastructure Corp)' },
+        { key: 'higher_studies', label: 'Higher Studies / Competitive Exam', type: 'text', placeholder: 'e.g. GRE / GATE' },
       ]
     },
     infrastructure: {
@@ -116,9 +116,9 @@ const CONFIG = {
       fields: [
         { key: 'type', label: 'Type of Contribution', type: 'select', options: ['Journal Publication', 'Sponsored Research Project', 'Consultancy Assignment', 'Conference Publication', 'Book / Book Chapter', 'Patent Granted / Published'] },
         { key: 'title', label: 'Title / Grant Project Name', type: 'text', req: true, placeholder: 'Title of research paper or project' },
-        { key: 'authors', label: 'Author(s) / Investigators', type: 'text', placeholder: 'e.g. Dr. Joseph Kurian (PI), Dr. Priya V. Nair (Co-PI)' },
+        { key: 'authors', label: 'Author(s) / Investigators', type: 'text', placeholder: 'e.g. Dr. John Doe (PI), Dr. Jane Smith (Co-PI)' },
         { key: 'year', label: 'Calendar / Academic Year', type: 'number', placeholder: '2025' },
-        { key: 'venue', label: 'Journal Name / Funding Agency / Client', type: 'text', placeholder: 'e.g. Journal of Structural Engineering (ASCE) or DST-SERB' },
+        { key: 'venue', label: 'Journal Name / Funding Agency / Client', type: 'text', placeholder: 'e.g. Journal of Structural Engineering (ASCE)' },
         { key: 'indexing', label: 'Indexing Database', type: 'select', options: ['Scopus', 'Web of Science (WoS)', 'UGC-CARE List', 'Peer Reviewed / Other'] },
         { key: 'amount_inr', label: 'Sanctioned Grant / Consultancy Amount (INR)', type: 'number', placeholder: 'e.g. 3450000' },
         { key: 'evidence_url', label: 'DOI / Sanction Order Link', type: 'text', placeholder: 'https://doi.org/...' },
@@ -130,13 +130,13 @@ const CONFIG = {
       sheetKey: 'events',
       consumers: 'NAAC SSR (Criteria 3 & 6) · NBA Criterion 5.8 · AICTE Annual Return',
       fields: [
-        { key: 'title', label: 'Event / FDP Title', type: 'text', req: true, placeholder: 'e.g. AICTE-ATAL 5-Day FDP on Earthquake Engineering' },
+        { key: 'title', label: 'Event / FDP Title', type: 'text', req: true, placeholder: 'e.g. 5-Day Faculty Development Program on Earthquake Engineering' },
         { key: 'category', label: 'Event Category', type: 'select', options: ['Faculty Development Program (FDP)', 'National Conference', 'International Conference', 'Technical Workshop', 'Guest Lecture / Seminar', 'Industrial Visit'] },
-        { key: 'coordinator', label: 'Faculty Coordinator(s)', type: 'text', placeholder: 'e.g. Dr. Ramesh Chandra' },
+        { key: 'coordinator', label: 'Faculty Coordinator(s)', type: 'text', placeholder: 'e.g. Dr. John Doe' },
         { key: 'start_date', label: 'Start Date (YYYY-MM-DD)', type: 'text', placeholder: '2025-02-14' },
         { key: 'end_date', label: 'End Date (YYYY-MM-DD)', type: 'text', placeholder: '2025-02-15' },
         { key: 'participants_count', label: 'Number of Participants', type: 'number' },
-        { key: 'venue', label: 'Venue / Platform', type: 'text', placeholder: 'Audi Block, Kengeri Campus' },
+        { key: 'venue', label: 'Venue / Platform', type: 'text', placeholder: 'Seminar Hall, Main Campus' },
         { key: 'evidence_url', label: 'Report / Brochure Link', type: 'text', placeholder: 'https://...' },
       ]
     },
@@ -162,12 +162,12 @@ const CONFIG = {
       consumers: 'Internal Department Accreditation Committee (DAC) Workflow',
       fields: [
         { key: 'title', label: 'Task Title / Action Item', type: 'text', req: true, placeholder: 'e.g. Upload Course Attainment Sheet for CIV301' },
-        { key: 'assigned_to_email', label: 'Assign to Faculty (Email)', type: 'text', req: true, placeholder: 'ramesh.chandra@christuniversity.in' },
-        { key: 'assigned_to_name', label: 'Faculty Name', type: 'text', placeholder: 'Dr. Ramesh Chandra' },
+        { key: 'assigned_to_email', label: 'Assign to Faculty (Email)', type: 'text', req: true, placeholder: 'john.doe@university.edu' },
+        { key: 'assigned_to_name', label: 'Faculty Name', type: 'text', placeholder: 'Dr. John Doe' },
         { key: 'course_code', label: 'Course Code / Lab Reference', type: 'text', placeholder: 'CIV301 - Design of RC Structures' },
         { key: 'due_date', label: 'Target Completion Date (YYYY-MM-DD)', type: 'text', placeholder: '2026-10-15' },
         { key: 'status', label: 'Task Status', type: 'select', options: ['Pending', 'In Progress', 'Completed', 'Verified by IQAC'] },
-        { key: 'submission_url', label: 'Submission Document / Evidence Link', type: 'text', placeholder: 'https://drive.google.com/...' },
+        { key: 'submission_url', label: 'Submission Document / Evidence Link', type: 'text', placeholder: 'https://drive.google.com/drive/my-drive' },
         { key: 'remarks', label: 'Coordinator Guidance / Remarks', type: 'textarea', placeholder: 'Specific guidelines for this task...' },
       ]
     }
@@ -177,11 +177,11 @@ const CONFIG = {
 const state = {
   activeTab: 'hierarchy',
   currentUser: {
-    name: 'Dr. Ramesh Chandra',
-    email: 'ramesh.chandra@christuniversity.in',
+    name: 'Dr. John Doe',
+    email: 'john.doe@university.edu',
     role: 'iqac',
-    title: 'HoD & Civil IQAC Coordinator',
-    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=RameshChandra&backgroundColor=c29b38'
+    title: 'HoD & Department IQAC Coordinator',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=JohnDoe&backgroundColor=c29b38'
   },
   theme: 'light',
   searchQuery: '',
@@ -189,13 +189,13 @@ const state = {
   accreditationTab: 'naac',
   sidebarOpen: false,
   institution: {
-    university_name: 'CHRIST (Deemed to be University)',
-    campus: 'Bangalore Kengeri Campus',
+    university_name: 'Apex University',
+    campus: 'Main Academic Campus',
     naac_accreditation_cycle: 'Cycle 4 (A+ Grade)',
     school_name: 'School of Engineering and Technology',
     department_name: 'Department of Civil Engineering',
-    head_of_department: 'Dr. Joseph Kurian',
-    iqac_coordinator: 'Dr. Ramesh Chandra',
+    head_of_department: 'Dr. John Doe',
+    iqac_coordinator: 'Dr. Jane Smith',
     academic_year: '2026-27'
   },
   hierarchy: null,
@@ -368,16 +368,18 @@ function toggleSidebar() {
 // ============================================================================
 function renderSidebar() {
   const u = state.currentUser;
+  const inst = state.institution || {};
+  const initials = (inst.university_name || 'AU').split(/\s+/).filter(Boolean).map(w => w[0]).join('').slice(0, 2).toUpperCase() || 'AU';
   const pendingCount = ['faculty', 'infrastructure', 'research', 'events', 'programs'].reduce(
     (sum, k) => sum + (state.data[k] || []).filter(r => r.status === 'Submitted to IQAC').length, 0
   );
 
   return `
     <div class="sidebar-header">
-      <div class="sidebar-brand-crest">CU</div>
+      <div class="sidebar-brand-crest">${esc(initials)}</div>
       <div class="sidebar-brand-info">
         <h2>VERITA</h2>
-        <div class="inst-tag">CHRIST (Deemed to be University)</div>
+        <div class="inst-tag" title="${esc(inst.university_name || 'Apex University')}">${esc(inst.university_name || 'Apex University')}</div>
       </div>
     </div>
 
@@ -391,9 +393,14 @@ function renderSidebar() {
           <span class="user-role-badge">${esc(u.title || u.role)}</span>
         </div>
       </div>
-      <button class="user-auth-action-btn" onclick="openAuthModal()">
-        <span>🔐 Switch Account / Google Login</span>
-      </button>
+      <div style="display: flex; gap: 6px; margin-top: 8px;">
+        <button class="user-auth-action-btn" style="flex: 1;" onclick="openEditInstitutionModal()" title="Edit University, School, Department and HoD names">
+          <span>⚙️ Setup</span>
+        </button>
+        <button class="user-auth-action-btn" style="flex: 1.2;" onclick="openAuthModal()" title="Sign in with your Google Account">
+          <span>🔐 Login/Roles</span>
+        </button>
+      </div>
     </div>
 
     <!-- Navigation Categories -->
@@ -456,6 +463,7 @@ function renderHierarchyBanner() {
         <span style="opacity: 0.85; font-size: 0.74rem;">(AY ${esc(inst.academic_year)})</span>
       </div>
       <div style="display: flex; gap: 8px;">
+        <button class="hierarchy-edit-btn" onclick="openEditInstitutionModal()" title="Edit University & Department details">⚙️ Edit Details</button>
         <button class="hierarchy-edit-btn" onclick="selectNavTab('hierarchy')">🌲 Drive Tree</button>
         <button class="hierarchy-edit-btn" onclick="selectNavTab('drivesync')">📊 Live Sheets Hub</button>
       </div>
@@ -464,7 +472,7 @@ function renderHierarchyBanner() {
 }
 
 // ============================================================================
-// Google Auth Modal
+// Google Auth & Department Setup Modal
 // ============================================================================
 async function openAuthModal() {
   let personas = [];
@@ -472,70 +480,108 @@ async function openAuthModal() {
     personas = await api('/api/auth/personas');
   } catch (_) {
     personas = [
-      { role: 'director', name: 'Dr. Anil Kumar', email: 'director.iqac@christuniversity.in', title: 'University IQAC Director' },
-      { role: 'dean', name: 'Dr. Iven Jose', email: 'dean.set@christuniversity.in', title: 'Dean, School of Engg & Tech' },
-      { role: 'iqac', name: 'Dr. Ramesh Chandra', email: 'ramesh.chandra@christuniversity.in', title: 'HoD & Civil IQAC Coordinator' },
-      { role: 'faculty', name: 'Dr. Priya V. Nair', email: 'priya.nair@christuniversity.in', title: 'Faculty Member (Geotechnical)' }
+      { role: 'iqac', name: 'Dr. John Doe', email: 'john.doe@university.edu', title: 'HoD & Department IQAC Coordinator' },
+      { role: 'director', name: 'Dr. Jane Smith', email: 'director.iqac@university.edu', title: 'University IQAC Director' },
+      { role: 'dean', name: 'Dr. Robert Taylor', email: 'dean.set@university.edu', title: 'Dean, School of Engineering & Technology' },
+      { role: 'faculty', name: 'Prof. Alice Johnson', email: 'alice.johnson@university.edu', title: 'Assistant Professor (Transportation)' },
+      { role: 'faculty', name: 'Dr. Michael Brown', email: 'michael.brown@university.edu', title: 'Professor (Environmental Engineering)' }
     ];
   }
 
+  const inst = state.institution || {};
+  const hier = state.hierarchy || {};
+  const currentDrive = hier.university?.drive_folder_url || 'https://drive.google.com/drive/my-drive';
+
   const modalHtml = `
     <div class="modal-backdrop" id="modalBackdrop">
-      <div class="modal-dialog google-auth-dialog">
+      <div class="modal-dialog google-auth-dialog" style="max-width: 620px;">
         <div class="modal-header">
           <div style="display: flex; align-items: center; gap: 10px;">
             <div style="width: 28px; height: 28px; background: #FFF; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,0.15);">
               <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.9c2.28-2.1 3.64-5.2 3.64-9.15z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.9-3.05c-1.08.72-2.45 1.16-4.03 1.16-3.1 0-5.73-2.1-6.68-4.94H1.21v3.15C3.25 21.4 7.33 24 12 24z"/><path fill="#FBBC05" d="M5.32 14.26c-.24-.72-.38-1.5-.38-2.26s.14-1.54.38-2.26V6.59H1.21C.44 8.12 0 9.99 0 12s.44 3.88 1.21 5.41l4.11-3.15z"/><path fill="#EA4335" d="M12 4.77c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.25 2.6 1.21 6.59l4.11 3.15c.95-2.84 3.58-4.97 6.68-4.97z"/></svg>
             </div>
-            <h3 style="font-size: 1.05rem;">Institutional Google Sign-In</h3>
+            <h3 style="font-size: 1.05rem;">Google Sign-In & Department Setup</h3>
           </div>
           <button class="btn" onclick="closeModal()" style="border: none; font-size: 1.1rem;">✕</button>
         </div>
         <div class="modal-body">
-          <p style="font-size: 0.82rem; color: var(--ink-soft); margin-bottom: 14px;">
-            Sign in with your official university Google account (<span style="font-family: var(--font-mono);">@christuniversity.in</span>) to access your assigned school, department folders, and live Google Sheets.
+          <p style="font-size: 0.82rem; color: var(--ink-soft); margin-bottom: 12px;">
+            Sign in with your Google or work account. Enter your institution, department, and role to configure your department workspace and link your Google Drive.
           </p>
 
-          <h4 style="font-size: 0.82rem; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 8px; letter-spacing: 0.05em;">
-            Instant Academic Personas (1-Click Test Login):
-          </h4>
-          <div style="margin-bottom: 16px;">
-            ${personas.map(p => `
-              <div class="persona-picker-item" onclick="executeGoogleLogin('${esc(p.email)}', '${esc(p.name)}', '${esc(p.role)}', '${esc(p.title)}')">
-                <img src="${esc(p.avatar || 'https://api.dicebear.com/7.x/initials/svg?seed=' + p.name)}" style="width: 32px; height: 32px; border-radius: 50%;">
-                <div style="flex: 1; min-width: 0;">
-                  <strong style="font-size: 0.86rem; color: var(--ink); display: block;">${esc(p.name)}</strong>
-                  <div style="font-size: 0.74rem; color: var(--ink-soft);">${esc(p.title)} · <span style="font-family: var(--font-mono);">${esc(p.email)}</span></div>
-                </div>
-                <span class="pill approved" style="font-size: 0.68rem;">Select</span>
+          <!-- Main Interactive Form -->
+          <div style="background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
+            <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div class="form-group">
+                <label>Your Full Name *</label>
+                <input type="text" id="authName" value="${esc(state.currentUser.name || 'Dr. John Doe')}" placeholder="e.g. Dr. John Doe" required>
               </div>
-            `).join('')}
-          </div>
+              <div class="form-group">
+                <label>Google / Work Email *</label>
+                <input type="email" id="authEmail" value="${esc(state.currentUser.email || 'john.doe@university.edu')}" placeholder="e.g. john.doe@university.edu" required>
+              </div>
+            </div>
 
-          <div style="border-top: 1px solid var(--line); padding-top: 14px;">
-            <h4 style="font-size: 0.82rem; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 8px;">
-              Or Sign in with Custom Google/Gmail Address:
-            </h4>
             <div class="form-group">
-              <label>Google Email</label>
-              <input type="email" id="customGoogleEmail" placeholder="your.name@christuniversity.in" value="faculty.civil@christuniversity.in">
-            </div>
-            <div class="form-group">
-              <label>Full Name</label>
-              <input type="text" id="customGoogleName" placeholder="Dr. Firstname Lastname" value="Dr. Faculty Member">
-            </div>
-            <div class="form-group">
-              <label>Role</label>
-              <select id="customGoogleRole">
-                <option value="faculty">Serving Faculty Member</option>
-                <option value="iqac">Department IQAC Coordinator / HoD</option>
-                <option value="dean">School Dean / Director</option>
-                <option value="director">University IQAC Director</option>
+              <label>Your Role in the Accreditation System *</label>
+              <select id="authRole">
+                <option value="iqac" ${state.currentUser.role === 'iqac' ? 'selected' : ''}>Department HoD & IQAC Coordinator (Full Department Access)</option>
+                <option value="faculty" ${state.currentUser.role === 'faculty' ? 'selected' : ''}>Serving Faculty Member (Task Upload & Data Input)</option>
+                <option value="dean" ${state.currentUser.role === 'dean' ? 'selected' : ''}>School Dean / Director (School Oversight)</option>
+                <option value="director" ${state.currentUser.role === 'director' ? 'selected' : ''}>University IQAC Director (Central Governance)</option>
               </select>
             </div>
-            <button class="btn primary" style="width: 100%; margin-top: 8px;" onclick="executeCustomGoogleLogin()">
-              Sign in with Google Account
-            </button>
+
+            <div class="form-group">
+              <label>University / Institution Name *</label>
+              <input type="text" id="authUniversity" value="${esc(inst.university_name || 'Apex University')}" placeholder="e.g. Apex University" required>
+            </div>
+
+            <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div class="form-group">
+                <label>School / Faculty Division *</label>
+                <input type="text" id="authSchool" value="${esc(inst.school_name || 'School of Engineering and Technology')}" placeholder="e.g. School of Engineering" required>
+              </div>
+              <div class="form-group">
+                <label>Department Name *</label>
+                <input type="text" id="authDept" value="${esc(inst.department_name || 'Department of Civil Engineering')}" placeholder="e.g. Department of Civil Engineering" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Google Drive Folder URL (Evidence Vault)</label>
+              <div style="display: flex; gap: 6px;">
+                <input type="url" id="authDriveUrl" value="${esc(currentDrive)}" placeholder="https://drive.google.com/drive/my-drive" style="flex: 1;">
+                <button type="button" class="btn" onclick="window.open('https://drive.google.com/drive/my-drive', '_blank')" title="Open Google Drive to create or copy folder link">📂 Open Drive</button>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 8px; margin-top: 12px;">
+              <button class="btn primary" style="flex: 2; padding: 8px 12px; font-weight: 600;" onclick="executeCustomGoogleLogin()">
+                🚀 Sign In & Launch Portal
+              </button>
+              <button type="button" class="btn" style="flex: 1; font-size: 0.76rem;" onclick="fillDemoJohnDoe()">
+                ⚡ Fill Demo (John Doe)
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Test Persona Switcher -->
+          <div style="border-top: 1px solid var(--line); padding-top: 12px;">
+            <h4 style="font-size: 0.78rem; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 8px; letter-spacing: 0.05em;">
+              Or Quick 1-Click Persona Switch (Testing):
+            </h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              ${personas.map(p => `
+                <div class="persona-picker-item" style="padding: 8px 10px; margin: 0; cursor: pointer;" onclick="quickSelectPersona('${esc(p.email)}', '${esc(p.name)}', '${esc(p.role)}', '${esc(p.title)}')">
+                  <img src="${esc(p.avatar || 'https://api.dicebear.com/7.x/initials/svg?seed=' + p.name)}" style="width: 28px; height: 28px; border-radius: 50%;">
+                  <div style="flex: 1; min-width: 0;">
+                    <strong style="font-size: 0.8rem; color: var(--ink); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${esc(p.name)}</strong>
+                    <div style="font-size: 0.7rem; color: var(--ink-soft);">${esc(p.role.toUpperCase())}</div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
           </div>
         </div>
         <div class="modal-footer">
@@ -547,16 +593,60 @@ async function openAuthModal() {
   document.getElementById('modalRoot').innerHTML = modalHtml;
 }
 
-async function executeGoogleLogin(email, name, role, title) {
+function fillDemoJohnDoe() {
+  document.getElementById('authName').value = 'Dr. John Doe';
+  document.getElementById('authEmail').value = 'john.doe@university.edu';
+  document.getElementById('authRole').value = 'iqac';
+  document.getElementById('authUniversity').value = 'Apex University';
+  document.getElementById('authSchool').value = 'School of Engineering and Technology';
+  document.getElementById('authDept').value = 'Department of Civil Engineering';
+  document.getElementById('authDriveUrl').value = 'https://drive.google.com/drive/my-drive';
+}
+
+function quickSelectPersona(email, name, role, title) {
+  const n = document.getElementById('authName');
+  const e = document.getElementById('authEmail');
+  const r = document.getElementById('authRole');
+  if (n) n.value = name;
+  if (e) e.value = email;
+  if (r) r.value = role;
+  executeCustomGoogleLogin();
+}
+
+async function executeCustomGoogleLogin() {
+  const name = document.getElementById('authName').value.trim();
+  const email = document.getElementById('authEmail').value.trim();
+  const role = document.getElementById('authRole').value;
+  const university_name = document.getElementById('authUniversity').value.trim();
+  const school_name = document.getElementById('authSchool').value.trim();
+  const department_name = document.getElementById('authDept').value.trim();
+  const drive_folder_url = document.getElementById('authDriveUrl').value.trim();
+
+  if (!email || !name) {
+    showToast('Name and Email are required', 'error');
+    return;
+  }
+
   try {
     const res = await api('/api/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, name, role })
+      body: JSON.stringify({
+        email,
+        name,
+        role,
+        university_name,
+        school_name,
+        department_name,
+        drive_folder_url
+      })
     });
     if (res.user) {
-      state.currentUser = { ...res.user, title: title || res.user.role };
+      state.currentUser = res.user;
+      if (res.institution) state.institution = res.institution;
+      if (res.hierarchy) state.hierarchy = res.hierarchy;
       localStorage.setItem('verita_user_session', JSON.stringify(state.currentUser));
-      showToast(`Signed in as ${res.user.name} (${res.user.role})`, 'success');
+      saveLocalCache();
+      showToast(`Signed in as ${res.user.name} (${res.user.role}) for ${state.institution.department_name}`, 'success');
       closeModal();
       render();
     }
@@ -565,15 +655,178 @@ async function executeGoogleLogin(email, name, role, title) {
   }
 }
 
-async function executeCustomGoogleLogin() {
-  const email = document.getElementById('customGoogleEmail').value.trim();
-  const name = document.getElementById('customGoogleName').value.trim();
-  const role = document.getElementById('customGoogleRole').value;
-  if (!email) {
-    showToast('Please enter an email address', 'error');
+// ============================================================================
+// Modal: Edit Institution & Profile Settings
+// ============================================================================
+function openEditInstitutionModal() {
+  const inst = state.institution || {};
+  const hier = state.hierarchy || {};
+  const currentDrive = hier.university?.drive_folder_url || 'https://drive.google.com/drive/my-drive';
+
+  const modalHtml = `
+    <div class="modal-backdrop" id="modalBackdrop">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 1.2rem;">🏛️</span>
+            <h3 style="font-size: 1.05rem;">Institution, Department & Leadership Setup</h3>
+          </div>
+          <button class="btn" onclick="closeModal()" style="border: none; font-size: 1.1rem;">✕</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size: 0.82rem; color: var(--ink-soft); margin-bottom: 14px;">
+            Customize your University, School, and Department details. These names will dynamically reflect across all accreditation metrics, SSR profiles, reports, and Google Sheets.
+          </p>
+          <div class="form-group">
+            <label>University / Institution Name *</label>
+            <input type="text" id="editUniName" value="${esc(inst.university_name || 'Apex University')}" required>
+          </div>
+          <div class="form-group">
+            <label>School / Faculty Division *</label>
+            <input type="text" id="editSchoolName" value="${esc(inst.school_name || 'School of Engineering and Technology')}" required>
+          </div>
+          <div class="form-group">
+            <label>Department Name *</label>
+            <input type="text" id="editDeptName" value="${esc(inst.department_name || 'Department of Civil Engineering')}" required>
+          </div>
+          <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+              <label>Head of Department (HoD)</label>
+              <input type="text" id="editHodName" value="${esc(inst.head_of_department || 'Dr. John Doe')}">
+            </div>
+            <div class="form-group">
+              <label>IQAC Coordinator</label>
+              <input type="text" id="editIqacName" value="${esc(inst.iqac_coordinator || 'Dr. Jane Smith')}">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Academic Year</label>
+            <input type="text" id="editAcadYear" value="${esc(inst.academic_year || '2026-27')}">
+          </div>
+          <div class="form-group">
+            <label>Department Google Drive Folder Link</label>
+            <div style="display: flex; gap: 6px;">
+              <input type="url" id="editDriveUrl" value="${esc(currentDrive)}" placeholder="https://drive.google.com/drive/my-drive" style="flex: 1;">
+              <button type="button" class="btn" onclick="window.open('https://drive.google.com/drive/my-drive', '_blank')" title="Open Google Drive">📂 Open Drive</button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn" onclick="closeModal()">Cancel</button>
+          <button class="btn primary" onclick="saveInstitutionDetails()">Save & Apply Across Portal</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('modalRoot').innerHTML = modalHtml;
+}
+
+async function saveInstitutionDetails() {
+  const university_name = document.getElementById('editUniName').value.trim();
+  const school_name = document.getElementById('editSchoolName').value.trim();
+  const department_name = document.getElementById('editDeptName').value.trim();
+  const head_of_department = document.getElementById('editHodName').value.trim();
+  const iqac_coordinator = document.getElementById('editIqacName').value.trim();
+  const academic_year = document.getElementById('editAcadYear').value.trim();
+  const drive_folder_url = document.getElementById('editDriveUrl').value.trim();
+
+  if (!university_name || !department_name) {
+    showToast('University Name and Department Name are required', 'error');
     return;
   }
-  await executeGoogleLogin(email, name, role);
+
+  try {
+    const res = await api('/api/institution/profile', {
+      method: 'PUT',
+      body: JSON.stringify({
+        university_name,
+        school_name,
+        department_name,
+        head_of_department,
+        iqac_coordinator,
+        academic_year,
+        drive_folder_url
+      })
+    });
+    if (res.institution) {
+      state.institution = res.institution;
+      if (res.hierarchy) state.hierarchy = res.hierarchy;
+      saveLocalCache();
+      showToast('Institutional profile and hierarchy updated successfully!', 'success');
+      closeModal();
+      render();
+    }
+  } catch (err) {
+    showToast('Failed to update details: ' + err.message, 'error');
+  }
+}
+
+// ============================================================================
+// Modal: Connect Google Drive Folder
+// ============================================================================
+function openEditDriveFolderModal(level, id, currentUrl, name) {
+  const modalHtml = `
+    <div class="modal-backdrop" id="modalBackdrop">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 1.2rem;">📂</span>
+            <h3 style="font-size: 1.05rem;">Connect Google Drive Folder</h3>
+          </div>
+          <button class="btn" onclick="closeModal()" style="border: none; font-size: 1.1rem;">✕</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size: 0.82rem; color: var(--ink-soft); margin-bottom: 12px;">
+            Target: <strong>${esc(name)}</strong> (${level.toUpperCase()})
+          </p>
+          <div class="form-group">
+            <label>Google Drive Folder URL</label>
+            <input type="url" id="targetDriveUrl" value="${esc(currentUrl || 'https://drive.google.com/drive/my-drive')}" placeholder="https://drive.google.com/drive/folders/..." required>
+            <span style="font-size: 0.72rem; color: var(--ink-muted);">Paste the exact URL of your folder in Google Drive.</span>
+          </div>
+          <div style="margin: 12px 0; background: var(--accent-soft); border-radius: 6px; padding: 10px 12px; font-size: 0.78rem;">
+            💡 <strong>Need to create a folder in your Drive?</strong>
+            <div style="margin-top: 6px;">
+              <button class="btn" style="padding: 4px 10px; font-size: 0.74rem;" onclick="window.open('https://drive.google.com/drive/my-drive', '_blank')">
+                ➕ Open Google Drive to Create Folder
+              </button>
+            </div>
+            <div style="font-size: 0.72rem; color: var(--ink-soft); margin-top: 4px;">
+              Create your folder, right-click it &gt; Share &gt; Copy link, and paste it above!
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn" onclick="closeModal()">Cancel</button>
+          <button class="btn primary" onclick="saveDriveFolderLink('${esc(level)}', '${esc(id)}')">Save Folder Link</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('modalRoot').innerHTML = modalHtml;
+}
+
+async function saveDriveFolderLink(level, id) {
+  const url = document.getElementById('targetDriveUrl').value.trim();
+  if (!url) {
+    showToast('Please enter a valid Google Drive URL', 'error');
+    return;
+  }
+  try {
+    const res = await api('/api/hierarchy/folder-link', {
+      method: 'PUT',
+      body: JSON.stringify({ level, targetId: id, folder_url: url })
+    });
+    if (res.hierarchy) {
+      state.hierarchy = res.hierarchy;
+      saveLocalCache();
+      showToast('Google Drive folder linked successfully!', 'success');
+      closeModal();
+      render();
+    }
+  } catch (err) {
+    showToast('Failed saving folder link: ' + err.message, 'error');
+  }
 }
 
 // ============================================================================
@@ -595,7 +848,7 @@ function renderHierarchyView() {
         </div>
         <div style="display: flex; gap: 8px;">
           <button class="btn primary" onclick="openAddSchoolModal()">+ Create School Folder</button>
-          <a href="${esc(uni.drive_folder_url || 'https://drive.google.com')}" target="_blank" class="drive-open-btn">
+          <a href="${esc(uni.drive_folder_url || 'https://drive.google.com/drive/my-drive')}" target="_blank" class="drive-open-btn">
             📂 Open Root Drive Hub
           </a>
         </div>
@@ -613,14 +866,17 @@ function renderHierarchyView() {
             <span style="font-size: 1.2rem;">🏛️</span>
             <div>
               <div style="font-size: 1rem; font-weight: 700;">${esc(uni.name || uni.university_name)}</div>
-              <div style="font-size: 0.74rem; opacity: 0.85;">Central Accreditation & IQAC Governance Hub · ${esc(uni.campus)}</div>
+              <div style="font-size: 0.74rem; opacity: 0.85;">Central Accreditation & IQAC Governance Hub · ${esc(uni.campus || 'Main Campus')}</div>
             </div>
           </div>
-          <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
             <span class="drive-perm-tag" style="background: rgba(255,255,255,0.2); color: #FFF;">University IQAC Access</span>
-            <a href="${esc(uni.drive_folder_url || 'https://drive.google.com')}" target="_blank" class="drive-open-btn" style="color: #0E355F;">
-              📂 Open Drive Folder
+            <a href="${esc(uni.drive_folder_url || 'https://drive.google.com/drive/my-drive')}" target="_blank" class="drive-open-btn" style="color: #0E355F;">
+              📂 Open Drive
             </a>
+            <button class="btn" style="padding: 3px 8px; font-size: 0.74rem; background: rgba(255,255,255,0.9); color: #0E355F;" onclick="openEditDriveFolderModal('university', '${uni.id || 'uni-main'}', '${esc(uni.drive_folder_url || '')}', '${esc(uni.name || uni.university_name)}')">
+              ✏️ Connect
+            </button>
           </div>
         </div>
 
@@ -633,14 +889,17 @@ function renderHierarchyView() {
                   <span style="font-size: 1.1rem;">🏫</span>
                   <div>
                     <div style="font-size: 0.95rem; font-weight: 600;">${esc(school.name)}</div>
-                    <div style="font-size: 0.75rem; color: var(--ink-soft);">Dean: ${esc(school.dean_name)} (${esc(school.dean_email || 'dean@christuniversity.in')})</div>
+                    <div style="font-size: 0.75rem; color: var(--ink-soft);">Dean: ${esc(school.dean_name)} (${esc(school.dean_email || 'dean@university.edu')})</div>
                   </div>
                 </div>
                 <div style="display: flex; align-items: center; gap: 8px;">
                   <span class="drive-perm-tag">Dean & School IQAC</span>
-                  <a href="${esc(school.drive_folder_url || 'https://drive.google.com')}" target="_blank" class="drive-open-btn">
+                  <a href="${esc(school.drive_folder_url || 'https://drive.google.com/drive/my-drive')}" target="_blank" class="drive-open-btn">
                     📂 School Drive
                   </a>
+                  <button class="btn" style="padding: 3px 8px; font-size: 0.74rem;" onclick="openEditDriveFolderModal('school', '${school.id}', '${esc(school.drive_folder_url || '')}', '${esc(school.name)}')">
+                    ✏️ Connect
+                  </button>
                   <button class="btn" style="padding: 3px 8px; font-size: 0.74rem;" onclick="openAddDeptModal('${school.id}')">
                     + Add Department
                   </button>
@@ -655,14 +914,17 @@ function renderHierarchyView() {
                       <div>
                         <strong style="font-size: 0.9rem; color: var(--christ-blue);">📂 ${esc(dept.name)}</strong>
                         <div style="font-size: 0.75rem; color: var(--ink-soft);">
-                          HoD: ${esc(dept.hod_name || 'Dr. Joseph Kurian')} · IQAC Coord: ${esc(dept.iqac_coordinator || 'Dr. Ramesh Chandra')}
+                          HoD: ${esc(dept.hod_name || state.institution.head_of_department || 'Dr. John Doe')} · IQAC Coord: ${esc(dept.iqac_coordinator || state.institution.iqac_coordinator || 'Dr. Jane Smith')}
                         </div>
                       </div>
                       <div style="display: flex; gap: 8px; align-items: center;">
                         <span class="pill approved">Live Active Dept</span>
-                        <a href="${esc(dept.drive_folder_url || 'https://drive.google.com')}" target="_blank" class="drive-open-btn">
-                          📂 Dept Drive Folder
+                        <a href="${esc(dept.drive_folder_url || 'https://drive.google.com/drive/my-drive')}" target="_blank" class="drive-open-btn">
+                          📂 Dept Drive
                         </a>
+                        <button class="btn" style="padding: 3px 8px; font-size: 0.74rem;" onclick="openEditDriveFolderModal('department', '${dept.id}', '${esc(dept.drive_folder_url || '')}', '${esc(dept.name)}')">
+                          ✏️ Connect
+                        </button>
                       </div>
                     </div>
 
@@ -704,8 +966,8 @@ function openAddSchoolModal() {
             <input type="text" id="newSchoolDean" placeholder="e.g. Dr. Father Director">
           </div>
           <div class="form-group">
-            <label>Dean Email (@christuniversity.in)</label>
-            <input type="email" id="newSchoolEmail" placeholder="dean.sbm@christuniversity.in">
+            <label>Dean Email (@university.edu)</label>
+            <input type="email" id="newSchoolEmail" placeholder="dean.engineering@university.edu">
           </div>
         </div>
         <div class="modal-footer">
@@ -757,8 +1019,8 @@ function openAddDeptModal(schoolId) {
             <input type="text" id="newDeptHod" placeholder="e.g. Dr. HOD Name">
           </div>
           <div class="form-group">
-            <label>HoD Email (@christuniversity.in)</label>
-            <input type="email" id="newDeptEmail" placeholder="hod.eee@christuniversity.in">
+            <label>HoD Email (@university.edu)</label>
+            <input type="email" id="newDeptEmail" placeholder="hod.civil@university.edu">
           </div>
           <div class="form-group">
             <label>Department IQAC Coordinator</label>
@@ -801,13 +1063,14 @@ async function submitNewDept(schoolId) {
 // Google Drive & Live Google Sheets Hub
 // ============================================================================
 function renderDriveSyncView() {
+  const deptSlug = (state.institution.department_name || 'Academic_Dept').replace(/[^a-zA-Z0-9]/g, '_');
   const sheets = [
-    { key: 'faculty', label: 'Faculty Cadre & Roster', sheetName: 'CHRIST_CE_Faculty_Roster' },
-    { key: 'students', label: 'Student Cohort & Diversity', sheetName: 'CHRIST_CE_Students_Cohort' },
-    { key: 'infrastructure', label: 'Infrastructure & Laboratories', sheetName: 'CHRIST_CE_Infrastructure_Labs' },
-    { key: 'research', label: 'Research, Grants & Patents', sheetName: 'CHRIST_CE_Research_Grants' },
-    { key: 'events', label: 'Events, FDPs & Workshops', sheetName: 'CHRIST_CE_Events_FDPs' },
-    { key: 'programs', label: 'NBA Academic Programs & OBE', sheetName: 'CHRIST_CE_NBA_Programs_OBE' }
+    { key: 'faculty', label: 'Faculty Cadre & Roster', sheetName: `${deptSlug}_Faculty_Roster` },
+    { key: 'students', label: 'Student Cohort & Diversity', sheetName: `${deptSlug}_Students_Cohort` },
+    { key: 'infrastructure', label: 'Infrastructure & Laboratories', sheetName: `${deptSlug}_Infrastructure_Labs` },
+    { key: 'research', label: 'Research, Grants & Patents', sheetName: `${deptSlug}_Research_Grants` },
+    { key: 'events', label: 'Events, FDPs & Workshops', sheetName: `${deptSlug}_Events_FDPs` },
+    { key: 'programs', label: 'NBA Academic Programs & OBE', sheetName: `${deptSlug}_NBA_Programs_OBE` }
   ];
 
   return `
@@ -931,7 +1194,7 @@ function copySampleDataAndOpenSheets(collKey) {
 
   if (rowsToExport.length === 0) {
     rowsToExport = [
-      { name: 'Dr. Sample Faculty', email: 'sample.faculty@christuniversity.in', designation: 'Professor', qualification: 'Ph.D.', specialization: 'Structural Engineering', experience_years: 12, employment_type: 'Regular', service_status: 'Current', gender: 'Male', publications_3yr: 5, patents: 1, evidence_url: 'https://orcid.org' }
+      { name: 'Dr. John Doe', email: 'john.doe@university.edu', designation: 'Professor', qualification: 'Ph.D.', specialization: 'Structural Engineering', experience_years: 12, employment_type: 'Regular', service_status: 'Current', gender: 'Male', publications_3yr: 5, patents: 1, evidence_url: 'https://orcid.org' }
     ];
   }
 
@@ -1418,7 +1681,7 @@ function renderCollection(key) {
       <div class="live-sheets-info">
         <div class="google-sheets-icon">📊</div>
         <div class="live-sheets-text">
-          <strong>Live Google Sheet: CHRIST_CE_${cfg.label.replace(/[^a-zA-Z0-9]/g, '_')}</strong>
+          <strong>Live Google Sheet: ${(state.institution.department_name || 'Academic').replace(/[^a-zA-Z0-9]/g, '_')}_${cfg.label.replace(/[^a-zA-Z0-9]/g, '_')}</strong>
           <span>${getAccountSheetUrl(key) ? `Linked to ${esc(state.currentUser.name)}'s Google Drive · Auto-persisted in Google Cloud` : 'Pre-filled with official sample data · Account specific'}</span>
         </div>
       </div>
