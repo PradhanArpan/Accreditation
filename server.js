@@ -304,6 +304,99 @@ app.post('/api/:table/:id/status', assertTable, async (req, res) => {
   }
 });
 
+// --- Master All-in-One Workbook Template ---
+app.get('/api/templates/master', (req, res) => {
+  const masterPath = path.join(__dirname, 'public', 'templates', 'CHRIST_Civil_Accreditation_Master_Template.xlsx');
+  if (fs.existsSync(masterPath)) {
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=CHRIST_Civil_Accreditation_Master_Template.xlsx');
+    return res.sendFile(masterPath);
+  }
+  res.status(404).json({ error: 'Master template not found' });
+});
+
+// --- Master Multi-Sheet Bulk Ingestion (All Sheets at Once) ---
+app.post('/api/upload/master', upload.single('file'), async (req, res) => {
+  try {
+    const { actor, role } = extractActor(req);
+    const mode = req.body.mode || 'append';
+    if (!req.file) return res.status(400).json({ error: 'No spreadsheet file uploaded' });
+
+    const wb = xlsx.read(req.file.buffer, { type: 'buffer' });
+    const results = {};
+
+    for (const sheetName of wb.SheetNames) {
+      const lower = sheetName.toLowerCase();
+      let table = null;
+      if (lower.includes('fac')) table = 'faculty';
+      else if (lower.includes('infra') || lower.includes('lab')) table = 'infrastructure';
+      else if (lower.includes('res') || lower.includes('grant') || lower.includes('pub')) table = 'research';
+      else if (lower.includes('prog') || lower.includes('nba') || lower.includes('obe')) table = 'programs';
+
+      if (table) {
+        const rawRows = xlsx.utils.sheet_to_json(wb.Sheets[sheetName]);
+        if (rawRows && rawRows.length > 0) {
+          const parsed = rawRows.map(raw => {
+            const rec = { status: 'Approved by IQAC', note: 'Imported from Master Google Sheet' };
+            Object.keys(raw).forEach(k => {
+              const val = raw[k];
+              const lk = k.toLowerCase().replace(/[^a-z0-9]/g, '');
+              if (table === 'faculty') {
+                if (lk.includes('name')) rec.name = String(val).trim();
+                else if (lk.includes('designation')) rec.designation = String(val).trim();
+                else if (lk.includes('qualif')) rec.qualification = String(val).trim();
+                else if (lk.includes('spec')) rec.specialization = String(val).trim();
+                else if (lk.includes('exp')) rec.experience_years = Number(val) || 0;
+                else if (lk.includes('cadre') || lk.includes('employ')) rec.employment_type = String(val).trim();
+                else if (lk.includes('pub')) rec.publications_3yr = Number(val) || 0;
+                else if (lk.includes('patent')) rec.patents = Number(val) || 0;
+                else if (lk.includes('orcid') || lk.includes('url')) rec.evidence_url = String(val).trim();
+              } else if (table === 'infrastructure') {
+                if (lk.includes('cat')) rec.category = String(val).trim();
+                else if (lk.includes('name') || lk.includes('room') || lk.includes('facility')) rec.name = String(val).trim();
+                else if (lk.includes('cap') || lk.includes('area')) rec.capacity = String(val).trim();
+                else if (lk.includes('equip')) rec.equipment_count = Number(val) || 0;
+                else if (lk.includes('year') || lk.includes('est')) rec.year_established = Number(val) || 0;
+                else if (lk.includes('note') || lk.includes('calib') || lk.includes('nabl')) rec.evidence_note = String(val).trim();
+              } else if (table === 'research') {
+                if (lk.includes('type')) rec.type = String(val).trim();
+                else if (lk.includes('title') || lk.includes('project')) rec.title = String(val).trim();
+                else if (lk.includes('author') || lk.includes('investig')) rec.authors = String(val).trim();
+                else if (lk.includes('year')) rec.year = Number(val) || 0;
+                else if (lk.includes('venue') || lk.includes('journal') || lk.includes('agency')) rec.venue = String(val).trim();
+                else if (lk.includes('index')) rec.indexing = String(val).trim();
+                else if (lk.includes('amount') || lk.includes('inr') || lk.includes('grant')) rec.amount_inr = Number(val) || null;
+                else if (lk.includes('doi') || lk.includes('url')) rec.evidence_url = String(val).trim();
+              } else if (table === 'programs') {
+                if (lk.includes('name') || lk.includes('prog') || lk.includes('title')) rec.name = String(val).trim();
+                else if (lk.includes('level')) rec.level = String(val).trim();
+                else if (lk.includes('tier')) rec.tier = String(val).trim();
+                else if (lk.includes('intake')) rec.intake = Number(val) || 0;
+                else if (lk.includes('co')) rec.co_count = Number(val) || 0;
+                else if (lk.includes('po')) rec.po_count = Number(val) || 0;
+                else if (lk.includes('attain')) rec.attainment_pct = Number(val) || 0;
+              }
+            });
+            return rec;
+          }).filter(r => r.name || r.title);
+
+          const inserted = await db.bulkInsert(table, parsed, mode);
+          results[table] = inserted.length;
+        }
+      }
+    }
+
+    await db.logAudit('BULK_MASTER_IMPORT', 'all_sheets', JSON.stringify(results), actor, role,
+      `Master spreadsheet ingested. Records updated: ${JSON.stringify(results)}`
+    );
+
+    res.json({ success: true, results });
+  } catch (e) {
+    console.error('Master upload error:', e);
+    res.status(500).json({ error: 'Master upload failed: ' + e.message });
+  }
+});
+
 // --- Template Generator API (.xlsx / .csv) ---
 app.get('/api/templates/:table', (req, res) => {
   const { table } = req.params;

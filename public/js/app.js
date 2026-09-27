@@ -415,13 +415,15 @@ function renderDashboard() {
     <div class="ingest-banner">
       <div class="ingest-info">
         <h4>📊 Standardized Spreadsheet Data Ingestion Hub</h4>
-        <p>Download official pre-formatted Excel templates for University / Department records, populate offline, and bulk-upload into the portal.</p>
+        <p>Download pre-formatted Excel / Google Sheets templates (with 4 sample entries each), populate offline, and bulk-upload into the portal.</p>
       </div>
       <div class="ingest-actions">
-        <button class="btn gold" onclick="openUploadModal('faculty')">📤 Upload Faculty Sheet</button>
-        <button class="btn gold" onclick="openUploadModal('infrastructure')">📤 Upload Labs Sheet</button>
-        <button class="btn gold" onclick="openUploadModal('research')">📤 Upload Research Sheet</button>
-        <button class="btn gold" onclick="openUploadModal('programs')">📤 Upload Programs Sheet</button>
+        <a href="/api/templates/master" class="btn primary" download>📥 Download Master Template (.xlsx for Google Sheets)</a>
+        <button class="btn gold" onclick="openUploadModal('master')">📤 Upload Master Sheet (All Domains)</button>
+        <button class="btn" onclick="openUploadModal('faculty')">📤 Upload Faculty</button>
+        <button class="btn" onclick="openUploadModal('infrastructure')">📤 Upload Labs</button>
+        <button class="btn" onclick="openUploadModal('research')">📤 Upload Research</button>
+        <button class="btn" onclick="openUploadModal('programs')">📤 Upload Programs</button>
       </div>
     </div>
 
@@ -927,7 +929,9 @@ async function saveHierarchy() {
 
 // --- Spreadsheet Bulk Ingestion Modal ---
 function openUploadModal(collKey) {
-  const cfg = CONFIG.collections[collKey];
+  const isMaster = collKey === 'master';
+  const cfg = isMaster ? { label: 'Master (All Domains)', singular: 'Master Workbook' } : CONFIG.collections[collKey];
+
   const modalHtml = `
     <div class="modal-backdrop" id="modalBackdrop">
       <div class="modal-dialog">
@@ -937,13 +941,16 @@ function openUploadModal(collKey) {
         </div>
         <div class="modal-body">
           <p style="font-size: 0.8rem; color: var(--ink-soft); margin-bottom: 12px;">
-            Upload your completed Excel (<strong>.xlsx</strong>) or CSV (<strong>.csv</strong>) spreadsheet.
+            ${isMaster
+              ? 'Upload your multi-sheet master workbook (contains sheets for Faculty, Labs, Research, Programs). Edit it directly in Google Sheets or Excel and upload.'
+              : 'Upload your completed Excel (<strong>.xlsx</strong>) or CSV (<strong>.csv</strong>) spreadsheet.'
+            }
           </p>
 
           <div class="upload-dropzone" onclick="document.getElementById('sheetFileInput').click()">
             <div class="upload-icon">📁</div>
             <strong id="fileChosenLabel">Click to select .xlsx or .csv spreadsheet file</strong>
-            <p style="font-size: 0.76rem; color: var(--ink-soft); margin-top: 4px;">Supports official template format</p>
+            <p style="font-size: 0.76rem; color: var(--ink-soft); margin-top: 4px;">Supports Google Sheets exported .xlsx / .csv</p>
             <input type="file" id="sheetFileInput" accept=".xlsx, .xls, .csv" style="display: none;">
           </div>
 
@@ -956,7 +963,11 @@ function openUploadModal(collKey) {
           </div>
 
           <div style="background: var(--paper); padding: 10px; border-radius: 6px; font-size: 0.78rem;">
-            💡 Need the template? <a href="/api/templates/${collKey}?format=xlsx" download>Download Excel Template (.xlsx)</a> or <a href="/api/templates/${collKey}?format=csv" download>CSV Template (.csv)</a>
+            💡 Need the template? 
+            ${isMaster 
+              ? `<a href="/api/templates/master" download><strong>Download Master Google Sheets / Excel Template (.xlsx)</strong></a> (with 4 sample entries)`
+              : `<a href="/api/templates/${collKey}?format=xlsx" download>Download Excel Template (.xlsx)</a> or <a href="/api/templates/${collKey}?format=csv" download>CSV Template (.csv)</a>`
+            }
           </div>
         </div>
         <div class="modal-footer">
@@ -992,8 +1003,10 @@ async function submitSpreadsheetUpload(collKey) {
   formData.append('file', file);
   formData.append('mode', mode);
 
+  const endpoint = collKey === 'master' ? '/api/upload/master' : `/api/upload/${collKey}`;
+
   try {
-    const res = await fetch(`/api/upload/${collKey}`, {
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'x-user-role': state.userRole,
@@ -1005,7 +1018,11 @@ async function submitSpreadsheetUpload(collKey) {
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || 'Upload failed');
 
-    showToast(`Successfully ingested ${json.count} ${CONFIG.collections[collKey].label.toLowerCase()}!`, 'success');
+    if (collKey === 'master') {
+      showToast('Master spreadsheet ingested successfully across all domains!', 'success');
+    } else {
+      showToast(`Successfully ingested ${json.count} ${CONFIG.collections[collKey].label.toLowerCase()}!`, 'success');
+    }
     closeModal();
     await loadAllData();
   } catch (err) {
@@ -1029,6 +1046,18 @@ function openDataManagementModal() {
             <div style="border: 1px solid var(--line); border-radius: 8px; padding: 14px; background: var(--paper);">
               <h4 style="font-size: 0.95rem; margin-bottom: 4px;">📥 Standard Spreadsheet Templates</h4>
               <p style="font-size: 0.8rem; color: var(--ink-soft); margin-bottom: 10px;">Download official institutional templates to populate with department data offline.</p>
+            <div style="border: 1px solid var(--line); border-radius: 8px; padding: 14px; background: var(--paper);">
+              <h4 style="font-size: 0.95rem; margin-bottom: 4px;">📥 Master Multi-Sheet Google Sheets / Excel Template</h4>
+              <p style="font-size: 0.8rem; color: var(--ink-soft); margin-bottom: 10px;">All-in-one workbook containing 5 sheets with 4 sample entries each (Dept Profile, Faculty, Infrastructure Labs, Research Grants, NBA Programs). Import directly into Google Sheets, edit, and upload back!</p>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <a href="/api/templates/master" class="btn primary" download>📥 Download Master Template (.xlsx for Google Sheets)</a>
+                <button class="btn gold" onclick="closeModal(); openUploadModal('master');">📤 Upload Master Sheet</button>
+              </div>
+            </div>
+
+            <div style="border: 1px solid var(--line); border-radius: 8px; padding: 14px; background: var(--paper);">
+              <h4 style="font-size: 0.95rem; margin-bottom: 4px;">📥 Domain-Specific Spreadsheet Templates</h4>
+              <p style="font-size: 0.8rem; color: var(--ink-soft); margin-bottom: 10px;">Individual templates for specific department committees.</p>
               <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                 <a href="/api/templates/faculty?format=xlsx" class="btn" download>Faculty (.xlsx)</a>
                 <a href="/api/templates/infrastructure?format=xlsx" class="btn" download>Infrastructure (.xlsx)</a>
