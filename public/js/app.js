@@ -1,6 +1,6 @@
 // ============================================================================
-// VERITA — Civil Engineering Accreditation Portal Application Controller
-// Department of Civil Engineering · CHRIST (Deemed to be University)
+// VERITA — Institutional Accreditation SaaS Platform Controller
+// University > School > Department Multi-Tier Architecture
 // ============================================================================
 
 const CONFIG = {
@@ -20,14 +20,15 @@ const CONFIG = {
     faculty: {
       label: 'Faculty Members',
       singular: 'Faculty Member',
+      templateName: 'faculty',
       consumers: 'NAAC SSR (Criterion 2) · NBA SAR (Criterion 5) · NIRF (TLR/FQE/FSR) · AICTE Mandatory Disclosure',
       fields: [
         { key: 'name', label: 'Full Name (with Title)', type: 'text', req: true, placeholder: 'e.g. Dr. Ramesh Chandra' },
         { key: 'designation', label: 'Designation', type: 'select', options: ['Professor', 'Associate Professor', 'Assistant Professor', 'Adjunct / Visiting Professor'] },
         { key: 'qualification', label: 'Highest Qualification', type: 'select', options: ['Ph.D.', 'M.Tech / M.E.', 'M.Sc.', 'B.Tech / B.E.', 'Other'] },
         { key: 'specialization', label: 'Area of Specialization', type: 'text', placeholder: 'e.g. Structural Dynamics & Earthquake Engg' },
-        { key: 'experience_years', label: 'Total Teaching / Industry Experience (Years)', type: 'number' },
-        { key: 'employment_type', label: 'Employment Cadre / Type', type: 'select', options: ['Regular', 'Contract', 'Adjunct'] },
+        { key: 'experience_years', label: 'Teaching / Industry Experience (Years)', type: 'number' },
+        { key: 'employment_type', label: 'Employment Cadre', type: 'select', options: ['Regular', 'Contract', 'Adjunct'] },
         { key: 'publications_3yr', label: 'Indexed Publications (Last 3 Years)', type: 'number' },
         { key: 'patents', label: 'Patents / IPR Filed / Granted', type: 'number' },
         { key: 'evidence_url', label: 'Profile / ORCID / Scholar URL', type: 'text', placeholder: 'https://orcid.org/0000-...' },
@@ -36,6 +37,7 @@ const CONFIG = {
     infrastructure: {
       label: 'Infrastructure & Laboratories',
       singular: 'Infrastructure Record',
+      templateName: 'infrastructure',
       consumers: 'NAAC SSR (Criterion 4) · NBA SAR (Criterion 6 - Facilities) · NIRF (TLR) · AICTE Handbook',
       fields: [
         { key: 'category', label: 'Facility Category', type: 'select', options: ['Laboratory', 'ICT Infrastructure', 'Library Resource', 'Smart Classroom', 'Research Center', 'Workshop', 'Other'] },
@@ -49,6 +51,7 @@ const CONFIG = {
     research: {
       label: 'Research, Publications & Grants',
       singular: 'Research / Project Record',
+      templateName: 'research',
       consumers: 'NAAC SSR (Criterion 3) · NIRF (RPC/FPHP) · NBA SAR (Criterion 5.7) · IQAC AQAR',
       fields: [
         { key: 'type', label: 'Type of Contribution', type: 'select', options: ['Journal Publication', 'Sponsored Research Project', 'Consultancy Assignment', 'Conference Publication', 'Book / Book Chapter', 'Patent Granted / Published'] },
@@ -64,6 +67,7 @@ const CONFIG = {
     programs: {
       label: 'NBA Academic Programs (OBE)',
       singular: 'Academic Program',
+      templateName: 'programs',
       consumers: 'NBA Self Assessment Report (SAR Tier-I/II) · Program Assessment Committee (PAC) · BoS',
       fields: [
         { key: 'name', label: 'Program Name', type: 'text', req: true, placeholder: 'e.g. B.Tech in Civil Engineering' },
@@ -94,14 +98,23 @@ const CONFIG = {
   ]
 };
 
-// Global App State
 const state = {
   activeTab: 'dashboard',
-  userRole: 'staff', // 'staff', 'iqac', 'admin'
+  userRole: 'staff',
   userName: 'Faculty / Staff Member',
   theme: 'light',
   searchQuery: '',
   statusFilter: 'ALL',
+  institution: {
+    university_name: 'CHRIST (Deemed to be University)',
+    campus: 'Bangalore Kengeri Campus',
+    naac_accreditation_cycle: 'Cycle 4 (A+ Grade)',
+    school_name: 'School of Engineering and Technology',
+    department_name: 'Department of Civil Engineering',
+    head_of_department: 'Dr. Joseph Kurian',
+    iqac_coordinator: 'Dr. Ramesh Chandra',
+    academic_year: '2026-27'
+  },
   data: {
     faculty: [],
     infrastructure: [],
@@ -140,8 +153,9 @@ async function api(path, opts = {}) {
 
 async function loadAllData() {
   try {
-    const [health, profile, faculty, infra, research, programs, audit, analytics] = await Promise.all([
+    const [health, inst, profile, faculty, infra, research, programs, audit, analytics] = await Promise.all([
       api('/health').catch(() => ({ ok: false, engine: 'Offline' })),
+      api('/api/institution').catch(() => state.institution),
       api('/api/profile').catch(() => ({})),
       api('/api/faculty').catch(() => []),
       api('/api/infrastructure').catch(() => []),
@@ -152,6 +166,7 @@ async function loadAllData() {
     ]);
 
     state.systemStatus = health;
+    state.institution = inst || state.institution;
     state.profile = profile || {};
     state.data.faculty = faculty || [];
     state.data.infrastructure = infra || [];
@@ -168,7 +183,7 @@ async function loadAllData() {
 }
 
 // ============================================================================
-// Helpers & Utilities
+// Helpers
 // ============================================================================
 function esc(val) {
   if (val === undefined || val === null) return '';
@@ -205,21 +220,39 @@ function showToast(message, type = 'info') {
 }
 
 // ============================================================================
-// UI Renderers
+// Top Header & Hierarchy Banner
 // ============================================================================
 function renderHeader() {
   const pendingCount = ['faculty', 'infrastructure', 'research', 'programs'].reduce(
     (sum, k) => sum + state.data[k].filter(r => r.status === 'Submitted to IQAC').length, 0
   );
 
+  const inst = state.institution || {};
+
   return `
+    <!-- Top Hierarchy Bar -->
+    <div class="hierarchy-banner no-print">
+      <div class="hierarchy-breadcrumbs">
+        <span>🏛️ ${esc(inst.university_name || 'University')}</span>
+        <span>›</span>
+        <span>🏫 ${esc(inst.school_name || 'School / Deanery')}</span>
+        <span>›</span>
+        <strong>📂 ${esc(inst.department_name || 'Department')}</strong>
+        <span style="opacity: 0.8; font-size: 0.72rem;">(${esc(inst.academic_year || '2026-27')})</span>
+      </div>
+      <div>
+        <button class="hierarchy-edit-btn" onclick="openHierarchyModal()">⚙️ Configure Hierarchy & Institute</button>
+      </div>
+    </div>
+
+    <!-- Main Navigation Header -->
     <header class="app-header">
       <div class="header-top">
         <div class="brand-section">
           <div class="brand-crest">CU</div>
           <div class="brand-titles">
-            <h1>VERITA — Civil Engineering Accreditation Portal</h1>
-            <div class="dept-sub">Dept. of Civil Engineering · School of Engineering & Technology · CHRIST (Deemed to be University)</div>
+            <h1>VERITA — Institutional Accreditation Portal</h1>
+            <div class="dept-sub">${esc(inst.department_name)} · ${esc(inst.school_name)} · ${esc(inst.university_name)}</div>
           </div>
         </div>
 
@@ -227,9 +260,9 @@ function renderHeader() {
           <div class="role-badge-wrapper">
             <label for="roleSelector">Role:</label>
             <select id="roleSelector" class="role-select">
-              <option value="staff" ${state.userRole === 'staff' ? 'selected' : ''}>Faculty / Department Staff</option>
-              <option value="iqac" ${state.userRole === 'iqac' ? 'selected' : ''}>IQAC Reviewer / HoD</option>
-              <option value="admin" ${state.userRole === 'admin' ? 'selected' : ''}>Accreditation Lead / Admin</option>
+              <option value="staff" ${state.userRole === 'staff' ? 'selected' : ''}>Faculty / Staff</option>
+              <option value="iqac" ${state.userRole === 'iqac' ? 'selected' : ''}>IQAC Lead / HoD</option>
+              <option value="admin" ${state.userRole === 'admin' ? 'selected' : ''}>Accreditation Admin</option>
             </select>
           </div>
 
@@ -237,9 +270,9 @@ function renderHeader() {
             ${state.theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
           </button>
 
-          <a href="/api/export-all" class="btn" title="Download Complete Backup" download>
-            💾 Backup JSON
-          </a>
+          <button class="btn" onclick="openDataManagementModal()" title="Spreadsheet & Dataset Hub">
+            ⚡ Data Hub
+          </button>
         </div>
       </div>
 
@@ -268,7 +301,6 @@ function renderDashboard() {
   const res = state.data.research.filter(r => r.status === 'Approved by IQAC');
   const prog = state.data.programs.filter(pr => pr.status === 'Approved by IQAC');
 
-  // Compute live scores
   let naacScore = 0;
   if (p.academic_year) naacScore += 15;
   if (p.total_students > 0) naacScore += 15;
@@ -306,8 +338,8 @@ function renderDashboard() {
     <div class="card">
       <div class="card-header">
         <div>
-          <h2 class="card-title">Institutional Accreditation Health & Readiness Index</h2>
-          <div class="card-subtitle">Continuous OBE & Compliance Radar for Academic Year ${esc(p.academic_year || '2026-27')}</div>
+          <h2 class="card-title">Accreditation Health & Compliance Index</h2>
+          <div class="card-subtitle">Continuous OBE & Regulatory Compliance Radar for ${esc(state.institution.department_name)} (${esc(p.academic_year || '2026-27')})</div>
         </div>
         <div>
           <span class="pill approved">Engine: ${state.systemStatus.engine}</span>
@@ -321,7 +353,7 @@ function renderDashboard() {
             <span class="readiness-pct">${naacScore}%</span>
           </div>
           <div class="meter-track"><div class="meter-fill ${naacScore >= 75 ? 'good' : 'warning'}" style="width: ${naacScore}%"></div></div>
-          <div class="stat-sub">Criteria 1-7 Quality Indicators & Metric Evidences</div>
+          <div class="stat-sub">Criteria 1-7 Quality Indicators & Evidences</div>
         </div>
 
         <div class="readiness-card">
@@ -330,7 +362,7 @@ function renderDashboard() {
             <span class="readiness-pct">${nbaScore}%</span>
           </div>
           <div class="meter-track"><div class="meter-fill ${nbaScore >= 75 ? 'good' : 'warning'}" style="width: ${nbaScore}%"></div></div>
-          <div class="stat-sub">PO/PSO Attainment & Continuous Curriculum Loop</div>
+          <div class="stat-sub">PO/PSO Attainment & Curriculum Assessment</div>
         </div>
 
         <div class="readiness-card">
@@ -339,7 +371,7 @@ function renderDashboard() {
             <span class="readiness-pct">${nirfScore}%</span>
           </div>
           <div class="meter-track"><div class="meter-fill ${nirfScore >= 75 ? 'good' : 'warning'}" style="width: ${nirfScore}%"></div></div>
-          <div class="stat-sub">Teaching Resources, Research Output & Outreach</div>
+          <div class="stat-sub">Teaching Resources & Research Publications</div>
         </div>
 
         <div class="readiness-card">
@@ -348,7 +380,7 @@ function renderDashboard() {
             <span class="readiness-pct">${aicteScore}%</span>
           </div>
           <div class="meter-track"><div class="meter-fill ${aicteScore >= 75 ? 'good' : 'warning'}" style="width: ${aicteScore}%"></div></div>
-          <div class="stat-sub">Mandatory Disclosure, Cadre Ratio & Infra Norms</div>
+          <div class="stat-sub">Mandatory Disclosure, Cadre Ratio & Infra</div>
         </div>
       </div>
     </div>
@@ -357,13 +389,13 @@ function renderDashboard() {
       <div class="stat-card">
         <div class="stat-label">Student-Faculty Ratio (SFR)</div>
         <div class="stat-value">${sfr} : 1</div>
-        <div class="stat-sub">NBA Tier-I Standard: ≤ 15:1 (${totalStudents} students / ${fac.length} approved faculty)</div>
+        <div class="stat-sub">Standard: ≤ 15:1 (${totalStudents} students / ${fac.length} approved faculty)</div>
       </div>
 
       <div class="stat-card">
         <div class="stat-label">Doctorate Qualification (Ph.D.)</div>
         <div class="stat-value">${phdPct}%</div>
-        <div class="stat-sub">${phdFacCount} of ${fac.length} faculty members hold Ph.D. degrees</div>
+        <div class="stat-sub">${phdFacCount} of ${fac.length} approved faculty members hold Ph.D.</div>
       </div>
 
       <div class="stat-card">
@@ -379,29 +411,43 @@ function renderDashboard() {
       </div>
     </div>
 
+    <!-- Bulk Ingestion Shortcut Card -->
+    <div class="ingest-banner">
+      <div class="ingest-info">
+        <h4>📊 Standardized Spreadsheet Data Ingestion Hub</h4>
+        <p>Download official pre-formatted Excel templates for University / Department records, populate offline, and bulk-upload into the portal.</p>
+      </div>
+      <div class="ingest-actions">
+        <button class="btn gold" onclick="openUploadModal('faculty')">📤 Upload Faculty Sheet</button>
+        <button class="btn gold" onclick="openUploadModal('infrastructure')">📤 Upload Labs Sheet</button>
+        <button class="btn gold" onclick="openUploadModal('research')">📤 Upload Research Sheet</button>
+        <button class="btn gold" onclick="openUploadModal('programs')">📤 Upload Programs Sheet</button>
+      </div>
+    </div>
+
     <div class="card">
       <div class="card-header">
-        <h3 class="card-title">Department Data Assets Summary</h3>
+        <h3 class="card-title">Department Compliance Inventory</h3>
         <button class="btn primary" onclick="state.activeTab='reports'; render();">Open Full Accreditation Dossier</button>
       </div>
       <table class="data-table">
         <thead>
           <tr>
-            <th>Assessment Category</th>
-            <th>Approved Records</th>
-            <th>Draft / In-Review</th>
+            <th>Assessment Domain</th>
+            <th>Approved Data</th>
+            <th>In Review / Draft</th>
             <th>Primary Accreditation Standard</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td><strong>Faculty & Academic Cadre</strong></td>
+            <td><strong>Faculty Cadre & Profile</strong></td>
             <td><span class="pill approved">${fac.length} Approved</span></td>
             <td>${state.data.faculty.length - fac.length} pending</td>
             <td>NAAC Criterion 2.4 · NBA Criterion 5 · NIRF FQE</td>
           </tr>
           <tr>
-            <td><strong>Infrastructure, Labs & Computing</strong></td>
+            <td><strong>Infrastructure & Laboratories</strong></td>
             <td><span class="pill approved">${infra.length} Approved</span></td>
             <td>${state.data.infrastructure.length - infra.length} pending</td>
             <td>NAAC Criterion 4.1 · NBA Criterion 6 (Facilities)</td>
@@ -413,7 +459,7 @@ function renderDashboard() {
             <td>NAAC Criterion 3.3 · NIRF Publications & Patents</td>
           </tr>
           <tr>
-            <td><strong>OBE Academic Programs</strong></td>
+            <td><strong>Academic Programs (OBE)</strong></td>
             <td><span class="pill approved">${prog.length} Approved</span></td>
             <td>${state.data.programs.length - prog.length} pending</td>
             <td>NBA Criteria 1-4 (Vision, Mission, PEOs, CO-PO)</td>
@@ -432,9 +478,9 @@ function renderProfile() {
       <div class="card-header">
         <div>
           <h2 class="card-title">Department Institutional Profile (SSR Extended Profile)</h2>
-          <div class="card-subtitle">Master institutional parameters for NAAC Part-A, NIRF Overall, and AICTE Annual Return.</div>
+          <div class="card-subtitle">Master institutional parameters for ${esc(state.institution.department_name)} feeding NAAC Part-A, NIRF Overall, and AICTE Annual Return.</div>
         </div>
-        <button class="btn primary" id="saveProfileBtn">💾 Save Profile Changes</button>
+        <button class="btn primary" id="saveProfileBtn">💾 Save Profile</button>
       </div>
 
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">
@@ -462,12 +508,11 @@ function renderProfile() {
   `;
 }
 
-// --- Collection Table View ---
+// --- Generic Collection Table View with Ingestion Toolbar ---
 function renderCollection(key) {
   const cfg = CONFIG.collections[key];
   const allRows = state.data[key] || [];
 
-  // Filter & Search
   let rows = allRows.filter(r => {
     if (state.statusFilter !== 'ALL' && r.status !== state.statusFilter) return false;
     if (state.searchQuery) {
@@ -481,6 +526,19 @@ function renderCollection(key) {
   const displayCols = cfg.fields.slice(0, 5);
 
   return `
+    <!-- Ingestion & Template Action Hub -->
+    <div class="ingest-banner">
+      <div class="ingest-info">
+        <h4>📋 ${cfg.label} Data Ingestion Hub</h4>
+        <p>Download standard Excel/CSV template spreadsheet, fill with department data, and upload for automated validation and mapping.</p>
+      </div>
+      <div class="ingest-actions">
+        <a href="/api/templates/${key}?format=xlsx" class="btn" download>📥 Template (.xlsx)</a>
+        <a href="/api/templates/${key}?format=csv" class="btn" download>📥 Template (.csv)</a>
+        <button class="btn gold" onclick="openUploadModal('${key}')">📤 Upload Filled Spreadsheet</button>
+      </div>
+    </div>
+
     <div class="card">
       <div class="card-header">
         <div>
@@ -488,8 +546,8 @@ function renderCollection(key) {
           <div class="card-subtitle">Feeds: ${cfg.consumers}</div>
         </div>
         <div style="display: flex; gap: 8px;">
-          <button class="btn" onclick="exportCSV('${key}')">📥 Export CSV</button>
-          <button class="btn primary" onclick="openEditModal('${key}', null)">+ Add ${cfg.singular}</button>
+          <button class="btn" onclick="exportCSV('${key}')">📥 Export Data (CSV)</button>
+          <button class="btn primary" onclick="openEditModal('${key}', null)">+ Add Single ${cfg.singular}</button>
         </div>
       </div>
 
@@ -509,7 +567,7 @@ function renderCollection(key) {
 
       ${rows.length === 0 ? `
         <div style="text-align: center; padding: 40px; color: var(--ink-soft);">
-          No ${cfg.label.toLowerCase()} found matching your filters.
+          No ${cfg.label.toLowerCase()} found. You can upload an Excel template or click "+ Add ${cfg.singular}" to begin.
         </div>
       ` : `
         <div class="table-wrapper">
@@ -565,7 +623,7 @@ function renderReviewQueue() {
       <div class="card-header">
         <div>
           <h2 class="card-title">IQAC Quality Assurance & Verification Queue</h2>
-          <div class="card-subtitle">Review, verify supporting documentary evidences, and approve records for final SSR/SAR compilation.</div>
+          <div class="card-subtitle">Review and verify department submissions against institutional standards for official SSR/SAR filing.</div>
         </div>
         <span class="pill submitted">${pendingItems.length} Awaiting Verification</span>
       </div>
@@ -573,7 +631,7 @@ function renderReviewQueue() {
       ${pendingItems.length === 0 ? `
         <div style="text-align: center; padding: 48px; color: var(--ink-soft);">
           <h3>✨ Review Inbox Clear</h3>
-          <p style="margin-top: 6px; font-size: 0.86rem;">No records are currently pending IQAC review.</p>
+          <p style="margin-top: 6px; font-size: 0.86rem;">No department submissions are currently pending IQAC review.</p>
         </div>
       ` : `
         <div style="display: flex; flex-direction: column; gap: 14px;">
@@ -624,7 +682,7 @@ function renderAuditTrail() {
       <div class="card-header">
         <div>
           <h2 class="card-title">Immutable Audit Trail & Activity Log</h2>
-          <div class="card-subtitle">Timestamped governance log tracking all additions, modifications, reviews, and status changes.</div>
+          <div class="card-subtitle">Timestamped governance log tracking additions, modifications, spreadsheet uploads, and approvals.</div>
         </div>
         <button class="btn" onclick="loadAllData()">🔄 Refresh Log</button>
       </div>
@@ -647,7 +705,7 @@ function renderAuditTrail() {
                   ${new Date(log.timestamp).toLocaleString()}
                 </td>
                 <td>
-                  <span class="pill ${log.action === 'APPROVE' ? 'approved' : (log.action === 'SEND_BACK' ? 'sentback' : 'draft')}">
+                  <span class="pill ${log.action === 'APPROVE' ? 'approved' : (log.action === 'SEND_BACK' ? 'sentback' : (log.action.includes('IMPORT') ? 'submitted' : 'draft'))}">
                     ${log.action}
                   </span>
                 </td>
@@ -665,6 +723,7 @@ function renderAuditTrail() {
 
 // --- Formal Reports View ---
 function renderReports() {
+  const inst = state.institution || {};
   const p = state.profile || {};
   const fac = state.data.faculty.filter(f => f.status === 'Approved by IQAC');
   const infra = state.data.infrastructure.filter(i => i.status === 'Approved by IQAC');
@@ -678,36 +737,37 @@ function renderReports() {
     <div class="no-print" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
       <div>
         <h2 style="font-family: var(--font-serif); font-size: 1.25rem;">Accreditation Dossier & Compliance Reports</h2>
-        <p style="font-size: 0.82rem; color: var(--ink-soft);">Compiled strictly from IQAC-approved records for official submission.</p>
+        <p style="font-size: 0.82rem; color: var(--ink-soft);">Official compliance dossier compiled for ${esc(inst.department_name)}, ${esc(inst.school_name)}.</p>
       </div>
       <button class="btn primary" onclick="window.print()">🖨️ Print / Save Official PDF</button>
     </div>
 
     <div class="report-page">
       <div class="report-header-formal">
-        <h2>CHRIST (Deemed to be University)</h2>
-        <h3>School of Engineering and Technology · Department of Civil Engineering</h3>
+        <h2>${esc(inst.university_name)}</h2>
+        <h3>${esc(inst.school_name)} · ${esc(inst.department_name)}</h3>
         <p>INTERNAL QUALITY ASSURANCE CELL (IQAC) — ACCREDITATION COMPLIANCE DOSSIER</p>
-        <p><strong>Academic Year: ${esc(p.academic_year || '2026-27')}</strong> · Document Ref: CU/SET/CIVIL/IQAC/${new Date().getFullYear()}/01</p>
+        <p><strong>Campus: ${esc(inst.campus)}</strong> · <strong>Academic Year: ${esc(inst.academic_year || p.academic_year)}</strong></p>
       </div>
 
       <h4 style="font-family: var(--font-serif); font-size: 1.05rem; margin-top: 18px; color: var(--christ-blue);">
-        1. NAAC SSR Extended Profile & Criterion Metrics Summary
+        1. Institutional Extended Profile & Metric Evidences
       </h4>
       <table class="report-table">
         <tbody>
-          <tr><td width="40%"><strong>Department & Academic Year</strong></td><td>Civil Engineering · ${esc(p.academic_year)}</td></tr>
+          <tr><td width="40%"><strong>University & Campus</strong></td><td>${esc(inst.university_name)} (${esc(inst.campus)})</td></tr>
+          <tr><td><strong>School & Department</strong></td><td>${esc(inst.school_name)} · ${esc(inst.department_name)}</td></tr>
           <tr><td><strong>Total Enrolled Students</strong></td><td>${esc(p.total_students)}</td></tr>
-          <tr><td><strong>Approved Full-Time Faculty Count</strong></td><td>${fac.length}</td></tr>
+          <tr><td><strong>Approved Full-Time Faculty Members</strong></td><td>${fac.length}</td></tr>
           <tr><td><strong>Student-to-Faculty Ratio (SFR)</strong></td><td><strong>${sfr} : 1</strong> (Compliant with AICTE/NBA norms)</td></tr>
-          <tr><td><strong>Approved Laboratory & ICT Facilities</strong></td><td>${infra.length} Registered Centers</td></tr>
-          <tr><td><strong>Approved Research Publications & Patents</strong></td><td>${res.length} Indexed Publications / Grants</td></tr>
+          <tr><td><strong>Approved Laboratories & Computing Centers</strong></td><td>${infra.length} Registered Centers</td></tr>
+          <tr><td><strong>Approved Research Publications & Patents</strong></td><td>${res.length} Indexed Publications / Projects</td></tr>
           <tr><td><strong>Annual Department Budget (Allocated / Utilized)</strong></td><td>${formatInr(p.budget_allocated_inr)} / ${formatInr(p.budget_utilized_inr)}</td></tr>
         </tbody>
       </table>
 
       <h4 style="font-family: var(--font-serif); font-size: 1.05rem; margin-top: 24px; color: var(--christ-blue);">
-        2. NBA Program-wise Outcome-Based Education (OBE) Status
+        2. NBA Program-wise Outcome-Based Education (OBE) Attainment
       </h4>
       <table class="report-table">
         <thead>
@@ -767,17 +827,17 @@ function renderReports() {
         <div class="sign-box">
           <div class="sign-line"></div>
           <strong>Prepared by</strong><br>
-          Accreditation Coordinator
+          ${esc(inst.iqac_coordinator || 'IQAC Coordinator')}
         </div>
         <div class="sign-box">
           <div class="sign-line"></div>
           <strong>Verified by</strong><br>
-          IQAC Department Lead
+          Dean, ${esc(inst.school_name)}
         </div>
         <div class="sign-box">
           <div class="sign-line"></div>
           <strong>Approved by</strong><br>
-          Head of the Department (HoD)
+          ${esc(inst.head_of_department || 'Head of the Department')}
         </div>
       </div>
     </div>
@@ -785,8 +845,250 @@ function renderReports() {
 }
 
 // ============================================================================
-// Modal & Action Controllers
+// Modals & Ingestion Controller
 // ============================================================================
+
+// --- Hierarchy Configuration Modal ---
+function openHierarchyModal() {
+  const inst = state.institution || {};
+  const modalHtml = `
+    <div class="modal-backdrop" id="modalBackdrop">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h3>⚙️ Configure Institutional Hierarchy</h3>
+          <button class="btn" onclick="closeModal()" style="border: none; font-size: 1.1rem;">✕</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size: 0.8rem; color: var(--ink-soft); margin-bottom: 14px;">
+            VERITA SaaS embeds full institutional hierarchy from University level down to individual Departments.
+          </p>
+
+          <form id="hierarchyForm" onsubmit="return false;">
+            <div class="form-group">
+              <label for="h_university">University / Higher Education Institution *</label>
+              <input type="text" id="h_university" value="${esc(inst.university_name)}" required>
+            </div>
+            <div class="form-group">
+              <label for="h_campus">Campus Location</label>
+              <input type="text" id="h_campus" value="${esc(inst.campus)}">
+            </div>
+            <div class="form-group">
+              <label for="h_school">School / Faculty / Deanery *</label>
+              <input type="text" id="h_school" value="${esc(inst.school_name)}" required>
+            </div>
+            <div class="form-group">
+              <label for="h_dept">Department / Discipline *</label>
+              <input type="text" id="h_dept" value="${esc(inst.department_name)}" required>
+            </div>
+            <div class="form-group">
+              <label for="h_hod">Head of Department (HoD)</label>
+              <input type="text" id="h_hod" value="${esc(inst.head_of_department)}">
+            </div>
+            <div class="form-group">
+              <label for="h_iqac">IQAC Coordinator</label>
+              <input type="text" id="h_iqac" value="${esc(inst.iqac_coordinator)}">
+            </div>
+            <div class="form-group">
+              <label for="h_year">Academic Assessment Year</label>
+              <input type="text" id="h_year" value="${esc(inst.academic_year)}">
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn" onclick="closeModal()">Cancel</button>
+          <button class="btn primary" onclick="saveHierarchy()">💾 Save Hierarchy Settings</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('modalRoot').innerHTML = modalHtml;
+}
+
+async function saveHierarchy() {
+  const payload = {
+    university_name: document.getElementById('h_university').value.trim(),
+    campus: document.getElementById('h_campus').value.trim(),
+    school_name: document.getElementById('h_school').value.trim(),
+    department_name: document.getElementById('h_dept').value.trim(),
+    head_of_department: document.getElementById('h_hod').value.trim(),
+    iqac_coordinator: document.getElementById('h_iqac').value.trim(),
+    academic_year: document.getElementById('h_year').value.trim(),
+  };
+
+  try {
+    await api('/api/institution', { method: 'PUT', body: JSON.stringify(payload) });
+    showToast('Institutional hierarchy updated.', 'success');
+    closeModal();
+    await loadAllData();
+  } catch (err) {
+    showToast('Failed to update hierarchy: ' + err.message, 'error');
+  }
+}
+
+// --- Spreadsheet Bulk Ingestion Modal ---
+function openUploadModal(collKey) {
+  const cfg = CONFIG.collections[collKey];
+  const modalHtml = `
+    <div class="modal-backdrop" id="modalBackdrop">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h3>📤 Upload ${cfg.label} Spreadsheet</h3>
+          <button class="btn" onclick="closeModal()" style="border: none; font-size: 1.1rem;">✕</button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size: 0.8rem; color: var(--ink-soft); margin-bottom: 12px;">
+            Upload your completed Excel (<strong>.xlsx</strong>) or CSV (<strong>.csv</strong>) spreadsheet.
+          </p>
+
+          <div class="upload-dropzone" onclick="document.getElementById('sheetFileInput').click()">
+            <div class="upload-icon">📁</div>
+            <strong id="fileChosenLabel">Click to select .xlsx or .csv spreadsheet file</strong>
+            <p style="font-size: 0.76rem; color: var(--ink-soft); margin-top: 4px;">Supports official template format</p>
+            <input type="file" id="sheetFileInput" accept=".xlsx, .xls, .csv" style="display: none;">
+          </div>
+
+          <div class="form-group">
+            <label for="ingestMode">Ingestion Mode:</label>
+            <select id="ingestMode">
+              <option value="append">Append (Add to existing records)</option>
+              <option value="replace">Replace / Overwrite (Clear old records first)</option>
+            </select>
+          </div>
+
+          <div style="background: var(--paper); padding: 10px; border-radius: 6px; font-size: 0.78rem;">
+            💡 Need the template? <a href="/api/templates/${collKey}?format=xlsx" download>Download Excel Template (.xlsx)</a> or <a href="/api/templates/${collKey}?format=csv" download>CSV Template (.csv)</a>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn" onclick="closeModal()">Cancel</button>
+          <button class="btn primary" id="uploadSubmitBtn" onclick="submitSpreadsheetUpload('${collKey}')">⚡ Upload & Ingest Data</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('modalRoot').innerHTML = modalHtml;
+
+  document.getElementById('sheetFileInput').onchange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      document.getElementById('fileChosenLabel').textContent = `Selected: ${e.target.files[0].name} (${Math.round(e.target.files[0].size / 1024)} KB)`;
+    }
+  };
+}
+
+async function submitSpreadsheetUpload(collKey) {
+  const fileInput = document.getElementById('sheetFileInput');
+  if (!fileInput.files || !fileInput.files[0]) {
+    showToast('Please select a spreadsheet file first.', 'error');
+    return;
+  }
+
+  const file = fileInput.files[0];
+  const mode = document.getElementById('ingestMode').value;
+  const btn = document.getElementById('uploadSubmitBtn');
+  btn.textContent = 'Ingesting & Processing...';
+  btn.disabled = true;
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('mode', mode);
+
+  try {
+    const res = await fetch(`/api/upload/${collKey}`, {
+      method: 'POST',
+      headers: {
+        'x-user-role': state.userRole,
+        'x-user-name': state.userName,
+      },
+      body: formData
+    });
+
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Upload failed');
+
+    showToast(`Successfully ingested ${json.count} ${CONFIG.collections[collKey].label.toLowerCase()}!`, 'success');
+    closeModal();
+    await loadAllData();
+  } catch (err) {
+    showToast('Ingestion error: ' + err.message, 'error');
+    btn.textContent = '⚡ Upload & Ingest Data';
+    btn.disabled = false;
+  }
+}
+
+// --- Data Hub & Reset Modal ---
+function openDataManagementModal() {
+  const modalHtml = `
+    <div class="modal-backdrop" id="modalBackdrop">
+      <div class="modal-dialog">
+        <div class="modal-header">
+          <h3>⚡ Institutional Data Hub & Ingestion Management</h3>
+          <button class="btn" onclick="closeModal()" style="border: none; font-size: 1.1rem;">✕</button>
+        </div>
+        <div class="modal-body">
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div style="border: 1px solid var(--line); border-radius: 8px; padding: 14px; background: var(--paper);">
+              <h4 style="font-size: 0.95rem; margin-bottom: 4px;">📥 Standard Spreadsheet Templates</h4>
+              <p style="font-size: 0.8rem; color: var(--ink-soft); margin-bottom: 10px;">Download official institutional templates to populate with department data offline.</p>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <a href="/api/templates/faculty?format=xlsx" class="btn" download>Faculty (.xlsx)</a>
+                <a href="/api/templates/infrastructure?format=xlsx" class="btn" download>Infrastructure (.xlsx)</a>
+                <a href="/api/templates/research?format=xlsx" class="btn" download>Research (.xlsx)</a>
+                <a href="/api/templates/programs?format=xlsx" class="btn" download>NBA Programs (.xlsx)</a>
+              </div>
+            </div>
+
+            <div style="border: 1px solid var(--line); border-radius: 8px; padding: 14px; background: var(--paper);">
+              <h4 style="font-size: 0.95rem; margin-bottom: 4px;">🧹 Clean Slate (Onboard Real Department)</h4>
+              <p style="font-size: 0.8rem; color: var(--ink-soft); margin-bottom: 10px;">Clear all demonstration records to begin real institution data entry.</p>
+              <button class="btn danger" onclick="resetCleanSlate()">Clear All Records (Clean Slate)</button>
+            </div>
+
+            <div style="border: 1px solid var(--line); border-radius: 8px; padding: 14px; background: var(--paper);">
+              <h4 style="font-size: 0.95rem; margin-bottom: 4px;">⚡ Demo Demonstration Dataset</h4>
+              <p style="font-size: 0.8rem; color: var(--ink-soft); margin-bottom: 10px;">Populate sample data for Christ Civil Engineering to showcase to review committees.</p>
+              <button class="btn" onclick="loadSampleData()">Populate Demonstration Data</button>
+            </div>
+
+            <div style="border: 1px solid var(--line); border-radius: 8px; padding: 14px; background: var(--paper);">
+              <h4 style="font-size: 0.95rem; margin-bottom: 4px;">💾 Complete System Backup</h4>
+              <p style="font-size: 0.8rem; color: var(--ink-soft); margin-bottom: 10px;">Download complete database as a timestamped JSON file.</p>
+              <a href="/api/export-all" class="btn primary" download>Download Master Backup</a>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn" onclick="closeModal()">Close</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('modalRoot').innerHTML = modalHtml;
+}
+
+async function resetCleanSlate() {
+  if (!confirm('Are you sure you want to clear all department records for fresh onboarding?')) return;
+  try {
+    await api('/api/dataset/reset-clean', { method: 'POST' });
+    showToast('All department records cleared. System ready for real institutional data ingestion.', 'info');
+    closeModal();
+    await loadAllData();
+  } catch (err) {
+    showToast('Reset failed: ' + err.message, 'error');
+  }
+}
+
+async function loadSampleData() {
+  try {
+    await api('/api/dataset/load-sample', { method: 'POST' });
+    showToast('Demo dataset loaded for CHRIST Dept. of Civil Engineering.', 'success');
+    closeModal();
+    await loadAllData();
+  } catch (err) {
+    showToast('Load failed: ' + err.message, 'error');
+  }
+}
+
+// --- Single Record Edit Modal ---
 function openEditModal(collKey, id) {
   const cfg = CONFIG.collections[collKey];
   const existing = id ? (state.data[collKey] || []).find(r => Number(r.id) === Number(id)) : null;
@@ -874,7 +1176,6 @@ async function saveRecord(collKey, id) {
     }
   }
 
-  // Basic validation
   const reqField = cfg.fields.find(f => f.req);
   if (reqField && !payload[reqField.key]) {
     showToast(`Please enter the required field: ${reqField.label}`, 'error');
@@ -914,7 +1215,7 @@ async function submitToIqac(collKey, id) {
       method: 'POST',
       body: JSON.stringify({ status: 'Submitted to IQAC', note: 'Submitted for verification.' })
     });
-    showToast('Record submitted to IQAC queue for verification.', 'success');
+    showToast('Record submitted to IQAC queue.', 'success');
     await loadAllData();
   } catch (err) {
     showToast(`Submit failed: ${err.message}`, 'error');
@@ -994,7 +1295,6 @@ function exportCSV(collKey) {
 // Event Binding & Main Lifecycle
 // ============================================================================
 function bindEvents() {
-  // Tabs
   document.querySelectorAll('.nav-tab').forEach(tabBtn => {
     tabBtn.onclick = () => {
       state.activeTab = tabBtn.dataset.tab;
@@ -1004,20 +1304,18 @@ function bindEvents() {
     };
   });
 
-  // Role selector
   const roleSelect = document.getElementById('roleSelector');
   if (roleSelect) {
     roleSelect.onchange = (e) => {
       state.userRole = e.target.value;
       if (state.userRole === 'staff') state.userName = 'Faculty / Staff Member';
-      else if (state.userRole === 'iqac') state.userName = 'Dr. Joseph Kurian (IQAC Lead)';
+      else if (state.userRole === 'iqac') state.userName = `${state.institution.head_of_department || 'Dr. Joseph Kurian'} (IQAC Lead)`;
       else state.userName = 'System Administrator';
       showToast(`Role switched to: ${e.target.options[e.target.selectedIndex].text}`, 'info');
       render();
     };
   }
 
-  // Theme toggle
   const themeBtn = document.getElementById('themeToggle');
   if (themeBtn) {
     themeBtn.onclick = () => {
@@ -1027,11 +1325,9 @@ function bindEvents() {
     };
   }
 
-  // Save profile button
   const saveProfBtn = document.getElementById('saveProfileBtn');
   if (saveProfBtn) saveProfBtn.onclick = saveProfile;
 
-  // Search input in collection table
   const searchInput = document.getElementById('tableSearchInput');
   if (searchInput) {
     searchInput.oninput = (e) => {
@@ -1044,7 +1340,6 @@ function bindEvents() {
     };
   }
 
-  // Status filter in collection table
   const statusSelect = document.getElementById('statusFilterSelect');
   if (statusSelect) {
     statusSelect.onchange = (e) => {
@@ -1081,7 +1376,6 @@ function render() {
   bindEvents();
 }
 
-// Initial Boot
 window.addEventListener('DOMContentLoaded', () => {
   loadAllData();
 });

@@ -1,105 +1,82 @@
-# VERITA — Civil Engineering Accreditation Portal
+# VERITA — Institutional Accreditation SaaS Platform
 
-**Department of Civil Engineering · School of Engineering & Technology**  
-**CHRIST (Deemed to be University), Bengaluru**
+**CHRIST (Deemed to be University)**  
+*School of Engineering & Technology · Department of Civil Engineering*
 
-An enterprise-grade, full-stack continuous accreditation and quality assurance portal designed to streamline **NAAC SSR (Criteria 1–7)**, **NBA SAR (Washington Accord Tier-I OBE)**, **NIRF Engineering Ranking**, and **AICTE Mandatory Disclosure** data collection, verification, and report compilation.
-
----
-
-## 🌟 Key Features & Architectural Upgrades
-
-1. **Hybrid Zero-Config Database Architecture**:
-   - **Local Mode**: Runs instantly out of the box with embedded persistent JSON storage (`db/local_data.json`) — zero external database installation required.
-   - **Production / Cloud Mode**: Seamlessly switches to managed **PostgreSQL** when `DATABASE_URL` is set (e.g., Render, Neon, Supabase, AWS RDS).
-   - **Auto-Seeding**: Comes pre-populated with realistic department datasets (Faculty profiles with ORCID/Scopus IDs, Geotechnical & Structural Labs, Scopus journal publications, DST-SERB research grants, B.Tech/M.Tech NBA OBE attainment records).
-
-2. **Accreditation Readiness & Analytics Radar**:
-   - Live compliance percentage gauges for **NAAC**, **NBA**, **NIRF**, and **AICTE**.
-   - Automatic calculation of **Student-to-Faculty Ratio (SFR)** against AICTE/NBA norms ($\le 15:1$).
-   - Ph.D. faculty ratio, Cadre ratio analysis, and Research Grant tracking.
-
-3. **Multi-Role Simulation & Governance**:
-   - **Faculty / Department Staff**: Draft, edit, and submit records with supporting evidence links.
-   - **IQAC Reviewer / HoD**: Dedicated QA inbox to verify documentary evidence, approve records, or send back submissions with actionable feedback.
-   - **Accreditation Lead / Admin**: Full administrative rights and system-wide dossier generation.
-
-4. **Evidence & Audit Trail**:
-   - Support for ORCID, DOI URLs, Scopus Author IDs, geo-tagged lab equipment records, and NABL calibration reports.
-   - Immutable **Audit Trail** capturing all actions, timestamps, actors, and reviewer remarks.
-
-5. **Formal Compliance Dossier & Export**:
-   - Official, printable Christ University institutional compliance report with formal header and sign-off blocks.
-   - Single-click **JSON full backup** and per-table **CSV exports**.
-   - Accessible **Dark / Light Theme** toggle with persistent styling.
+A multi-tier, institutional SaaS platform for continuous quality assurance and regulatory accreditation compliance across **NAAC SSR (Criteria 1–7)**, **NBA SAR (Washington Accord Tier-I OBE)**, **NIRF Engineering Ranking**, and **AICTE Mandatory Disclosure**.
 
 ---
 
-## 🚀 1. Running the Portal Locally
+## 🏛️ 1. Multi-Tier Institutional Hierarchy Embedded
 
-### Prerequisites
-- Node.js 18+ (Tested on Node v24)
+Designed to scale across any university or college while focusing on the active department:
 
-### Quick Start
-```bash
+```
+Level 1: Overarching University / HEI (CHRIST (Deemed to be University))
+    │
+    └── Level 2: School / Faculty / Deanery (School of Engineering and Technology)
+            │
+            └── Level 3: Department / Discipline (Department of Civil Engineering)
+```
+
+- **Interactive Hierarchy Breadcrumbs**: Configurable via the top navigation bar (`⚙️ Configure Hierarchy & Institute`).
+- **Scoped Compliance**: Every metric, SFR ratio, and faculty list rolls up cleanly to the department, school, and university level.
+
+---
+
+## 📊 2. Standardized Spreadsheet Ingestion Hub (Download, Fill, Upload)
+
+To eliminate manual one-by-one data entry, every domain includes pre-built templates:
+
+| Domain | Downloadable Templates | Automated Mapping & Validation |
+| :--- | :--- | :--- |
+| **Faculty Directory** | `.xlsx` / `.csv` | Name, Designation, Qualification, Specialization, Experience, Cadre, 3-Yr Pubs, Patents, ORCID URL |
+| **Infrastructure & Labs** | `.xlsx` / `.csv` | Category, Facility Name, Capacity, Equipment Count, Year Established, NABL/Calibration Ref |
+| **Research & Grants** | `.xlsx` / `.csv` | Contribution Type, Title, Authors, Year, Journal/Funding Agency, Scopus/WoS Indexing, Amount INR, DOI |
+| **NBA OBE Programs** | `.xlsx` / `.csv` | Program Title, Level (UG/PG), NBA Tier, Approved Intake, CO Count, PO Count, Direct Attainment % |
+| **Institutional Profile** | UI Form & Master Backup | Student Demographics, Gender Diversity, PwD, Placements, Median Salary, Budget Utilization |
+
+### Ingestion Workflow:
+1. **Download Template**: Click **`📥 Template (.xlsx)`** or **`📥 Template (.csv)`** from any tab or the **`⚡ Data Hub`**.
+2. **Fill Offline**: Department staff populate the sheet using Microsoft Excel, Google Sheets, or LibreOffice.
+3. **Upload & Ingest**: Click **`📤 Upload Filled Spreadsheet`**. Choose:
+   - **Append**: Adds new records to the current database.
+   - **Replace**: Fresh overwrite for an updated academic year.
+4. **Instant Radar Update**: The portal parses the sheet, validates rows, auto-computes Student-to-Faculty Ratio (SFR), updates the accreditation gauges, and refreshes the official dossier immediately!
+
+---
+
+## 🧹 3. Data Governance: Clean Slate & Demo Modes
+
+Click **`⚡ Data Hub`** in the top navigation:
+- **`Clear All Records (Clean Slate)`**: Empties all sample demonstration data so the department can start fresh with 100% genuine institutional records.
+- **`Populate Demonstration Data`**: One-click reload of sample Christ University Civil Engineering data for demo sessions with deans or review committees.
+- **`Download Master Backup`**: Single-click export of the entire database in JSON format.
+
+---
+
+## 🚀 4. Running Locally
+
+```powershell
 # Navigate to the project directory
-cd "Accreditation Portal"
+Set-Location "C:\Users\HP\OneDrive\3. Advanced Learning\2. Personal App Projects\Accreditation Portal\Accreditation Portal"
 
-# Install dependencies
+# Install dependencies (Node 18+)
 npm install
 
-# Start the portal
+# Start the server
 npm start
 ```
-
-Open your browser and visit:  
-👉 **`http://localhost:3000`**
+Visit **`http://localhost:3000`** in your browser.
 
 ---
 
-## 🌐 2. Pushing to GitHub
+## ☁️ 5. Cloud Deployment on Render
 
-```bash
-# Set your remote GitHub repository URL
-git remote add origin https://github.com/<your-username>/<your-repo-name>.git
-
-# Push to main branch
-git push -u origin main
-```
-
----
-
-## ☁️ 3. Deploying to Render (Free Cloud Hosting + Postgres)
-
-1. **Create Database**:
-   - On [Render](https://render.com), create a new **PostgreSQL** database (e.g. `christ-civil-portal-db`).
-2. **Create Web Service**:
-   - Create a new **Web Service** connected to your GitHub repository.
-   - Build Command: `npm install`
-   - Start Command: `npm start`
-   - Link the Postgres database under Environment Variables (`DATABASE_URL`).
-3. **Run**:
-   - Render automatically connects the database and launches HTTPS endpoints.
-
----
-
-## 📁 Project Structure
-
-```
-Accreditation Portal/
-├── db/
-│   ├── database.js     # Hybrid storage engine (Postgres + Zero-Config fallback)
-│   ├── pool.js         # Connection pool export
-│   ├── schema.sql      # Postgres DDL schema definition
-│   └── local_data.json # Persistent local storage & seed dataset
-├── public/
-│   ├── index.html      # Clean HTML5 entrypoint
-│   ├── css/
-│   │   └── style.css   # Modern responsive stylesheet + Dark/Light themes + Print styles
-│   └── js/
-│       └── app.js      # Frontend controller, live metrics, role simulator & modals
-├── server.js           # Express REST API, audit logger & analytics engine
-├── package.json        # Node manifest & scripts
-├── .env.example        # Environment variable template
-└── .gitignore          # Git ignore rules
-```
+1. On [Render Dashboard](https://dashboard.render.com), click **`+ New` → `Web Service`**.
+2. Connect your GitHub repository: **`PradhanArpan/Accreditation`**.
+3. Settings:
+   - **Build Command**: `npm install`
+   - **Start Command**: `npm start`
+   - **Plan**: Free
+4. Deploy! The application uses its embedded persistent storage out of the box and seamlessly switches to PostgreSQL whenever `DATABASE_URL` is configured.
