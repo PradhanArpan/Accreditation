@@ -1610,9 +1610,6 @@ async function saveLinkedSheet(collKey) {
   render();
   await syncFromGoogleSheet(collKey, url);
 }
-  render();
-  await syncFromGoogleSheet(collKey, url);
-}
 
 async function syncFromGoogleSheet(collKey, providedUrl = null) {
   const effectiveUrl = providedUrl || getAccountSheetUrl(collKey) || 'https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/export?format=csv';
