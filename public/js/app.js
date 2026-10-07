@@ -2764,7 +2764,8 @@ function openEditModal(collKey, id) {
 }
 
 function closeModal() {
-  document.getElementById('modalRoot').innerHTML = '';
+  const m = document.getElementById('modalRoot');
+  if (m) m.innerHTML = '';
 }
 
 async function saveRecord(collKey, id) {
@@ -2854,9 +2855,150 @@ function bindEvents() {
   }
 }
 
+// ============================================================================
+// Dedicated Login & Department Gateway Landing Page
+// ============================================================================
+function renderLoginPage() {
+  const inst = state.institution || {};
+  const currentDrive = inst.drive_folder_url || 'https://drive.google.com/drive/my-drive';
+  const personas = [
+    { role: 'iqac', name: 'Dr. John Doe', email: 'john.doe@university.edu', title: 'HoD & Dept IQAC Coordinator', avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=JohnDoe&backgroundColor=c29b38' },
+    { role: 'director', name: 'Dr. Jane Smith', email: 'director.iqac@university.edu', title: 'University IQAC Director', avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=JaneSmith&backgroundColor=0e355f' },
+    { role: 'dean', name: 'Dr. Robert Taylor', email: 'dean.set@university.edu', title: 'Dean, School of Engineering', avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=RobertTaylor&backgroundColor=184a80' },
+    { role: 'faculty', name: 'Prof. Alice Johnson', email: 'alice.johnson@university.edu', title: 'Assistant Professor (Transportation)', avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=AliceJohnson&backgroundColor=265b68' },
+    { role: 'faculty', name: 'Dr. Michael Brown', email: 'michael.brown@university.edu', title: 'Professor (Environmental)', avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=MichaelBrown&backgroundColor=1e6b3f' }
+  ];
+
+  return `
+    <div class="login-page-container">
+      <div class="login-card">
+        <div class="login-header-banner">
+          <div class="login-header-top">
+            <div class="login-brand">
+              <div class="login-crest">🏛️</div>
+              <div class="login-title">
+                <h1>VERITA ACCREDITATION PORTAL</h1>
+                <div class="login-subtitle">Multi-Tier Continuous Quality & Compliance Engine</div>
+              </div>
+            </div>
+            <button id="themeToggle" class="theme-toggle-btn" title="Toggle Theme" style="padding: 4px 10px; font-size: 0.78rem; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #FFF; border-radius: 6px; cursor: pointer;">
+              ${state.theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
+            </button>
+          </div>
+          <div style="font-size: 0.82rem; opacity: 0.95; margin-top: 6px; line-height: 1.4;">
+            🔐 <strong>Institutional Login & Department Setup</strong> · Multi-Tier Workspace (University › School › Department Folders & Live Sheets)
+          </div>
+        </div>
+
+        <div class="login-body">
+          <div class="login-info-box">
+            👋 <strong>Welcome to the Accreditation Portal!</strong> Sign in with your institutional or Google account. Enter your institution, department, and role to configure your department workspace and link your personal Google Drive folder.
+          </div>
+
+          <form onsubmit="event.preventDefault(); executeCustomGoogleLogin();">
+            <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label style="font-weight: 600; font-size: 0.82rem;">Your Full Name *</label>
+                <input type="text" id="authName" value="${esc(inst.head_of_department || 'Dr. John Doe')}" placeholder="e.g. Dr. John Doe" required>
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label style="font-weight: 600; font-size: 0.82rem;">Google / Work Email *</label>
+                <input type="email" id="authEmail" value="john.doe@university.edu" placeholder="e.g. john.doe@university.edu" required>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label style="font-weight: 600; font-size: 0.82rem;">Your Role in the Accreditation System *</label>
+              <select id="authRole">
+                <option value="iqac" selected>Department HoD & IQAC Coordinator (Full Department Access)</option>
+                <option value="faculty">Serving Faculty Member (Task Upload & Data Input)</option>
+                <option value="dean">School Dean / Director (School Oversight)</option>
+                <option value="director">University IQAC Director (Central Governance)</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+              <label style="font-weight: 600; font-size: 0.82rem;">University / Institution Name *</label>
+              <input type="text" id="authUniversity" value="${esc(inst.university_name || 'Apex University')}" placeholder="e.g. Apex University" required>
+            </div>
+
+            <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label style="font-weight: 600; font-size: 0.82rem;">School / Faculty Division *</label>
+                <input type="text" id="authSchool" value="${esc(inst.school_name || 'School of Engineering and Technology')}" placeholder="e.g. School of Engineering" required>
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label style="font-weight: 600; font-size: 0.82rem;">Department Name *</label>
+                <input type="text" id="authDept" value="${esc(inst.department_name || 'Department of Civil Engineering')}" placeholder="e.g. Department of Civil Engineering" required>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 18px;">
+              <label style="font-weight: 600; font-size: 0.82rem;">Google Drive Folder URL (Evidence Vault)</label>
+              <div style="display: flex; gap: 8px;">
+                <input type="url" id="authDriveUrl" value="${esc(currentDrive)}" placeholder="https://drive.google.com/drive/folders/..." style="flex: 1;">
+                <button type="button" class="btn" onclick="window.open('https://drive.google.com/drive/my-drive', '_blank')" title="Open Google Drive to create or copy folder link" style="white-space: nowrap; display: flex; align-items: center; gap: 6px;">
+                  <span>📂 Open Drive</span>
+                </button>
+              </div>
+              <div class="login-drive-tip">
+                📁 <strong>Google Drive Integration:</strong> The Google Drive link connects to a dedicated folder on your personal Google Drive, where the portal will have access to for maintaining and creating your department master sheets, faculty uploads, and SSR evidence documents.
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 22px;">
+              <button type="submit" class="btn primary" style="flex: 2; padding: 10px 16px; font-size: 0.92rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <span>🚀 Sign In & Launch Portal</span>
+              </button>
+              <button type="button" class="btn" style="flex: 1; font-size: 0.8rem; padding: 10px 12px;" onclick="fillDemoJohnDoe()">
+                <span>⚡ Fill Demo (John Doe)</span>
+              </button>
+            </div>
+          </form>
+
+          <!-- Quick 1-Click Role Switcher -->
+          <div style="border-top: 1px solid var(--line); padding-top: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <h4 style="font-size: 0.78rem; text-transform: uppercase; color: var(--ink-muted); margin: 0; letter-spacing: 0.05em;">
+                Or Quick 1-Click Test Persona:
+              </h4>
+              <span style="font-size: 0.72rem; color: var(--ink-soft);">Select role to preview instantly</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px;">
+              ${personas.map(p => `
+                <div class="persona-picker-item" style="padding: 8px 12px; margin: 0; cursor: pointer;" onclick="quickSelectPersona('${esc(p.email)}', '${esc(p.name)}', '${esc(p.role)}', '${esc(p.title)}')">
+                  <img src="${esc(p.avatar)}" style="width: 32px; height: 32px; border-radius: 50%;">
+                  <div style="flex: 1; min-width: 0;">
+                    <strong style="font-size: 0.8rem; color: var(--ink); display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${esc(p.name)}</strong>
+                    <div style="font-size: 0.7rem; color: var(--accent); font-weight: 500;">${esc(p.title || p.role.toUpperCase())}</div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- Trust Badges -->
+          <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-top: 22px; padding-top: 14px; border-top: 1px dashed var(--line); font-size: 0.74rem; color: var(--ink-soft);">
+            <span>🏛️ Multi-Tier Hierarchy Support</span>
+            <span>📊 Live Google Sheets & Drive Sync</span>
+            <span>🏆 NAAC SSR · NBA SAR · NIRF Compliant</span>
+          </div>
+        </div>
+      </div>
+      <div id="modalRoot"></div>
+    </div>
+  `;
+}
+
 function render() {
   const root = document.getElementById('app');
   if (!root) return;
+
+  if (!state.currentUser) {
+    root.innerHTML = renderLoginPage();
+    bindEvents();
+    return;
+  }
 
   let bodyHtml = '';
   if (state.activeTab === 'hierarchy') bodyHtml = renderHierarchyView();

@@ -1269,3 +1269,103 @@ table.data-table tbody tr:hover {
   transform: translateY(-1px);
 }
 
+/* ==========================================================================
+   Dedicated Login / Onboarding Gateway Page
+   ========================================================================== */
+.login-page-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  background: var(--paper);
+  background-image: radial-gradient(var(--line) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 680px;
+  background: var(--paper-card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.login-header-banner {
+  background: linear-gradient(135deg, var(--christ-blue) 0%, #08213D 100%);
+  color: #FFFFFF;
+  padding: 24px 30px;
+  border-bottom: 3px solid var(--christ-gold);
+}
+
+.login-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.login-crest {
+  width: 44px;
+  height: 44px;
+  background: var(--christ-gold);
+  color: #0E355F;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+
+.login-title h1 {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin: 0;
+  color: #FFFFFF;
+}
+
+.login-subtitle {
+  font-size: 0.78rem;
+  opacity: 0.88;
+  color: #ECE8E0;
+  margin-top: 2px;
+}
+
+.login-body {
+  padding: 24px 30px;
+}
+
+.login-info-box {
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 18px;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--ink);
+}
+
+.login-drive-tip {
+  background: var(--christ-gold-soft);
+  border: 1px solid var(--christ-gold);
+  border-radius: 6px;
+  padding: 9px 12px;
+  margin-top: 6px;
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: var(--ink);
+}
+
