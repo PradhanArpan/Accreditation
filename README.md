@@ -1,7 +1,6 @@
-# VERITA — Institutional Accreditation SaaS Platform
+# QUALEX 360 — Academic Quality & Accreditation Intelligence Platform
 
-**CHRIST (Deemed to be University)**  
-*School of Engineering & Technology · Department of Civil Engineering*
+*Autonomous Multi-Tier Compliance, Evidence Vault & Continuous Quality Improvement Suite*
 
 A multi-tier, institutional SaaS platform for continuous quality assurance and regulatory accreditation compliance across **NAAC SSR (Criteria 1–7)**, **NBA SAR (Washington Accord Tier-I OBE)**, **NIRF Engineering Ranking**, and **AICTE Mandatory Disclosure**.
 
@@ -12,11 +11,11 @@ A multi-tier, institutional SaaS platform for continuous quality assurance and r
 Designed to scale across any university or college while focusing on the active department:
 
 ```
-Level 1: Overarching University / HEI (CHRIST (Deemed to be University))
+Level 1: Overarching University / HEI (e.g. Apex University)
     │
-    └── Level 2: School / Faculty / Deanery (School of Engineering and Technology)
+    └── Level 2: School / Faculty / Deanery (e.g. School of Engineering and Technology)
             │
-            └── Level 3: Department / Discipline (Department of Civil Engineering)
+            └── Level 3: Department / Discipline (e.g. Department of Civil Engineering)
 ```
 
 - **Interactive Hierarchy Breadcrumbs**: Configurable via the top navigation bar (`⚙️ Configure Hierarchy & Institute`).
@@ -50,7 +49,7 @@ To eliminate manual one-by-one data entry, every domain includes pre-built templ
 
 Click **`⚡ Data Hub`** in the top navigation:
 - **`Clear All Records (Clean Slate)`**: Empties all sample demonstration data so the department can start fresh with 100% genuine institutional records.
-- **`Populate Demonstration Data`**: One-click reload of sample Christ University Civil Engineering data for demo sessions with deans or review committees.
+- **`Populate Demonstration Data`**: One-click reload of sample baseline academic accreditation data for demo sessions with deans or review committees.
 - **`Download Master Backup`**: Single-click export of the entire database in JSON format.
 
 ---

@@ -535,7 +535,7 @@ app.post('/api/sheets/sync/:table', assertTable, async (req, res) => {
         csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
       }
       try {
-        const fetchRes = await fetch(csvUrl, { headers: { 'User-Agent': 'Verita-Accreditation/1.0' } });
+        const fetchRes = await fetch(csvUrl, { headers: { 'User-Agent': 'QUALEX-360-Accreditation/2.0' } });
         if (fetchRes.ok) {
           const csvText = await fetchRes.text();
           const wb = xlsx.read(csvText, { type: 'string' });
@@ -985,6 +985,385 @@ app.get('/api/accreditation/breakdown', async (req, res) => {
   }
 });
 
+// ============================================================================
+// QUALEX 360 INTELLIGENCE ENGINE & EXTENDED SUITE APIS
+// ============================================================================
+
+// 1. Smart Gap Auditor & CGPA Predictor
+app.get('/api/audit/gap-analysis', async (req, res) => {
+  try {
+    const profile = await db.getComputedProfile();
+    const faculty = await db.getCollection('faculty') || [];
+    const students = await db.getCollection('students') || [];
+    const infra = await db.getCollection('infrastructure') || [];
+    const research = await db.getCollection('research') || [];
+    const programs = await db.getCollection('programs') || [];
+    const events = await db.getCollection('events') || [];
+    const tasks = await db.getCollection('tasks') || [];
+
+    const activeFac = faculty.filter(f => (f.service_status || 'Current') === 'Current');
+    const approvedFac = activeFac.filter(f => f.status === 'Approved by IQAC');
+    const approvedRes = research.filter(r => r.status === 'Approved by IQAC');
+    const approvedInfra = infra.filter(i => i.status === 'Approved by IQAC');
+    const labs = approvedInfra.filter(i => i.category === 'Laboratory');
+    const ict = approvedInfra.filter(i => i.category === 'ICT Infrastructure' || i.category === 'Smart Classroom');
+
+    const totalStudents = students.filter(s => (s.status || 'Active') === 'Active').length || students.length || 0;
+    const facCount = activeFac.length || 1;
+    const sfr = totalStudents > 0 ? Number((totalStudents / facCount).toFixed(1)) : (profile.student_faculty_ratio || 15.0);
+    const phdCount = activeFac.filter(f => (f.qualification || '').includes('Ph.D.')).length;
+    const phdPct = Number(((phdCount / facCount) * 100).toFixed(1));
+
+    const totalPubs = research.filter(r => (r.type || '').includes('Journal') || (r.type || '').includes('Conference')).length;
+    const scopusPubs = research.filter(r => (r.indexing || '') === 'Scopus' || (r.indexing || '') === 'Web of Science (WoS)').length;
+    const pubPerFac = Number((totalPubs / facCount).toFixed(2));
+    const patentsCount = research.filter(r => (r.type || '').toLowerCase().includes('patent')).length;
+    const grantsSum = research.reduce((acc, r) => acc + (Number(r.amount_inr) || 0), 0);
+
+    const avgAttainment = programs.length > 0
+      ? Number((programs.reduce((acc, p) => acc + (Number(p.attainment_pct) || 0), 0) / programs.length).toFixed(1))
+      : 84.2;
+
+    const fdpCount = events.filter(e => (e.category || '').includes('FDP') || (e.category || '').includes('Workshop')).length;
+    const fdpPerFac = Number((fdpCount / facCount).toFixed(2));
+
+    // NAAC 7 Criteria Assessment & Scoring Model (Total 1000 Weighted Marks)
+    // C1: Curricular Aspects (Weight: 100)
+    let c1Score = 80;
+    if (programs.length > 0 && avgAttainment >= 80) c1Score = 95;
+    else if (programs.length > 0) c1Score = 85;
+
+    // C2: Teaching-Learning & Evaluation (Weight: 350)
+    let c2Score = 240;
+    if (sfr <= 15) c2Score += 50; else if (sfr <= 20) c2Score += 30; else c2Score += 10;
+    if (phdPct >= 70) c2Score += 60; else if (phdPct >= 50) c2Score += 40; else c2Score += 20;
+
+    // C3: Research, Innovations & Extension (Weight: 120)
+    let c3Score = 70;
+    if (pubPerFac >= 1.5) c3Score += 25; else if (pubPerFac >= 0.8) c3Score += 15;
+    if (grantsSum >= 2000000) c3Score += 15; else if (grantsSum > 0) c3Score += 10;
+    if (patentsCount >= 2) c3Score += 10;
+
+    // C4: Infrastructure & Learning Resources (Weight: 100)
+    let c4Score = 75;
+    if (labs.length >= 4) c4Score += 15;
+    if (ict.length >= 2) c4Score += 10;
+
+    // C5: Student Support & Progression (Weight: 130)
+    const placedStudents = students.filter(s => (s.placement_status || '').toLowerCase().includes('placed')).length;
+    const placementRate = totalStudents > 0 ? Number(((placedStudents / totalStudents) * 100).toFixed(1)) : 78.5;
+    let c5Score = 85;
+    if (placementRate >= 75) c5Score += 35; else if (placementRate >= 60) c5Score += 20;
+
+    // C6: Governance, Leadership & Management (Weight: 100)
+    let c6Score = 75;
+    if (fdpPerFac >= 1.0) c6Score += 20; else if (fdpPerFac >= 0.5) c6Score += 10;
+
+    // C7: Institutional Values & Best Practices (Weight: 100)
+    const femaleStudents = students.filter(s => (s.gender || '').toLowerCase() === 'female').length;
+    const femalePct = totalStudents > 0 ? Number(((femaleStudents / totalStudents) * 100).toFixed(1)) : 38;
+    let c7Score = 80;
+    if (femalePct >= 35) c7Score += 15;
+
+    const totalWeightedScore = c1Score + c2Score + c3Score + c4Score + c5Score + c6Score + c7Score;
+    const cgpa = Number(((totalWeightedScore / 1000) * 4.0).toFixed(2));
+
+    let projectedGrade = 'B';
+    if (cgpa >= 3.51) projectedGrade = 'A++ (Highest Standing)';
+    else if (cgpa >= 3.26) projectedGrade = 'A+ (Distinguished)';
+    else if (cgpa >= 3.01) projectedGrade = 'A (Accredited)';
+    else if (cgpa >= 2.76) projectedGrade = 'B++';
+    else if (cgpa >= 2.51) projectedGrade = 'B+';
+
+    // Automated Actionable Gap Identification
+    const recommendations = [];
+    if (sfr > 15) {
+      recommendations.push({
+        criterion: 'Criterion 2 (Teaching-Learning)',
+        severity: 'high',
+        text: `Student-to-Faculty Ratio is currently ${sfr}:1. AICTE/NAAC optimum target is 15:1. Consider inducting ${Math.max(1, Math.ceil(totalStudents / 15) - facCount)} additional full-time faculty.`
+      });
+    }
+    if (phdPct < 60) {
+      recommendations.push({
+        criterion: 'Criterion 2 (Faculty Quality)',
+        severity: 'medium',
+        text: `Doctoral faculty percentage is ${phdPct}%. Target is ≥ 60% for Tier-I institutions. Encourage registered faculty to complete Ph.D. dissertations.`
+      });
+    }
+    if (pubPerFac < 1.5) {
+      recommendations.push({
+        criterion: 'Criterion 3 (Research & Innovations)',
+        severity: 'high',
+        text: `Indexed publication average is ${pubPerFac} papers/faculty. NAAC Benchmark requires ≥ 1.5 Scopus/WoS publications per faculty annually.`
+      });
+    }
+    const missingEvidencePubs = research.filter(r => !r.evidence_url || r.evidence_url.trim() === '').length;
+    if (missingEvidencePubs > 0) {
+      recommendations.push({
+        criterion: 'Criterion 3 (Evidence Vault)',
+        severity: 'critical',
+        text: `${missingEvidencePubs} research records are missing DOI or Sanction links. DVV audit rejects records without verified evidence.`
+      });
+    }
+    if (fdpPerFac < 1.0) {
+      recommendations.push({
+        criterion: 'Criterion 6 (Faculty Development)',
+        severity: 'medium',
+        text: `Faculty FDP participation is ${fdpPerFac} per faculty. IQAC mandates at least 1 professional development program per teacher per year.`
+      });
+    }
+    if (avgAttainment < 80) {
+      recommendations.push({
+        criterion: 'NBA Criterion 3 (Course Outcomes)',
+        severity: 'high',
+        text: `OBE Course Outcome Attainment is ${avgAttainment}%. Washington Accord standard benchmark is ≥ 80%. Program Assessment Committee review recommended.`
+      });
+    }
+
+    res.json({
+      success: true,
+      cgpa,
+      projectedGrade,
+      totalWeightedScore,
+      maxScore: 1000,
+      readinessPct: Number(((totalWeightedScore / 1000) * 100).toFixed(1)),
+      criteria: [
+        { id: 'C1', title: 'Curricular Aspects', weight: 100, score: c1Score, status: c1Score >= 85 ? 'Optimized' : 'Needs Review' },
+        { id: 'C2', title: 'Teaching-Learning & Evaluation', weight: 350, score: c2Score, status: c2Score >= 300 ? 'Optimized' : (c2Score >= 250 ? 'Compliant' : 'Gap Detected') },
+        { id: 'C3', title: 'Research, Innovations & Extension', weight: 120, score: c3Score, status: c3Score >= 95 ? 'Optimized' : 'Gap Detected' },
+        { id: 'C4', title: 'Infrastructure & Learning Resources', weight: 100, score: c4Score, status: c4Score >= 85 ? 'Optimized' : 'Compliant' },
+        { id: 'C5', title: 'Student Support & Progression', weight: 130, score: c5Score, status: c5Score >= 105 ? 'Optimized' : 'Compliant' },
+        { id: 'C6', title: 'Governance, Leadership & Management', weight: 100, score: c6Score, status: c6Score >= 85 ? 'Optimized' : 'Needs Review' },
+        { id: 'C7', title: 'Institutional Values & Best Practices', weight: 100, score: c7Score, status: c7Score >= 85 ? 'Optimized' : 'Compliant' }
+      ],
+      nbaMetrics: {
+        tier: 'Tier-I (Washington Accord)',
+        coAttainment: `${avgAttainment}%`,
+        sfr: `${sfr} : 1`,
+        phdFaculty: `${phdPct}%`,
+        cadreRatio: 'Compliant (1:2:6)'
+      },
+      recommendations
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Audit gap analysis failed: ' + err.message });
+  }
+});
+
+// 2. Faculty PBAS / CAS API Score Calculator (UGC 7th CPC Framework)
+app.get('/api/pbas/calculator', async (req, res) => {
+  try {
+    const faculty = await db.getCollection('faculty') || [];
+    const research = await db.getCollection('research') || [];
+    const events = await db.getCollection('events') || [];
+
+    const results = faculty.map(fac => {
+      const facName = (fac.name || '').toLowerCase();
+      const facEmail = (fac.email || '').toLowerCase();
+
+      // Find research attributed to faculty
+      const facRes = research.filter(r => {
+        const auth = (r.authors || '').toLowerCase();
+        return auth.includes(facName.replace('dr.', '').replace('prof.', '').trim()) || (r.user_email && r.user_email.toLowerCase() === facEmail);
+      });
+
+      // Find events coordinated by faculty
+      const facEvents = events.filter(e => {
+        const coord = (e.coordinator || '').toLowerCase();
+        return coord.includes(facName.replace('dr.', '').replace('prof.', '').trim());
+      });
+
+      // Category I: Teaching Activities (Max 80 points)
+      const expYears = Number(fac.experience_years) || 5;
+      const cat1Score = Math.min(80, 50 + (expYears * 2));
+
+      // Category II: Institutional Governance & IQAC Activities (Max 50 points)
+      let cat2Score = 20;
+      if (fac.designation === 'Professor') cat2Score += 20;
+      else if (fac.designation === 'Associate Professor') cat2Score += 15;
+      else cat2Score += 10;
+      cat2Score += Math.min(10, facEvents.length * 5);
+      cat2Score = Math.min(50, cat2Score);
+
+      // Category III: Research & Academic Contributions
+      let cat3Score = 0;
+      facRes.forEach(r => {
+        const type = (r.type || '').toLowerCase();
+        const indexing = (r.indexing || '').toLowerCase();
+        const grant = Number(r.amount_inr) || 0;
+
+        if (type.includes('journal')) {
+          if (indexing.includes('scopus') || indexing.includes('web of science')) cat3Score += 25;
+          else if (indexing.includes('ugc')) cat3Score += 15;
+          else cat3Score += 10;
+        } else if (type.includes('conference')) {
+          cat3Score += 10;
+        } else if (type.includes('grant') || type.includes('project')) {
+          if (grant >= 1000000) cat3Score += 20;
+          else if (grant >= 200000) cat3Score += 10;
+          else cat3Score += 5;
+        } else if (type.includes('patent')) {
+          cat3Score += 25;
+        } else if (type.includes('consultancy')) {
+          cat3Score += 10;
+        } else if (type.includes('book')) {
+          cat3Score += 12;
+        }
+      });
+
+      // Add points for patents / publications logged in faculty record directly
+      const extraPubs = Math.max(0, (Number(fac.publications_3yr) || 0) - facRes.length);
+      cat3Score += extraPubs * 15;
+      const extraPatents = Math.max(0, (Number(fac.patents) || 0) - facRes.filter(r => (r.type || '').toLowerCase().includes('patent')).length);
+      cat3Score += extraPatents * 25;
+
+      const totalApiScore = cat1Score + cat2Score + cat3Score;
+
+      let promotionEligibility = 'Current Cadre Verified';
+      if (fac.designation === 'Assistant Professor' && totalApiScore >= 120 && expYears >= 5) {
+        promotionEligibility = 'Eligible for Stage 2 / Senior Scale (AGP 7000 / Level 11)';
+      } else if (fac.designation === 'Assistant Professor' && totalApiScore >= 180 && expYears >= 9) {
+        promotionEligibility = 'Eligible for Selection Grade / Associate Professor (Level 12/13A)';
+      } else if (fac.designation === 'Associate Professor' && totalApiScore >= 250 && expYears >= 12) {
+        promotionEligibility = 'Eligible for Professor Grade (AGP 10000 / Level 14)';
+      } else if (fac.designation === 'Professor' && totalApiScore >= 350) {
+        promotionEligibility = 'Senior Professor Benchmark Achieved (Level 15)';
+      }
+
+      return {
+        id: fac.id,
+        name: fac.name,
+        email: fac.email,
+        designation: fac.designation,
+        qualification: fac.qualification,
+        experience_years: expYears,
+        papersCount: facRes.filter(r => (r.type || '').toLowerCase().includes('journal')).length + (Number(fac.publications_3yr) || 0),
+        patentsCount: Number(fac.patents) || 0,
+        grantsSum: facRes.reduce((acc, r) => acc + (Number(r.amount_inr) || 0), 0),
+        cat1Teaching: cat1Score,
+        cat2Governance: cat2Score,
+        cat3Research: cat3Score,
+        totalApiScore,
+        promotionEligibility
+      };
+    });
+
+    res.json({
+      success: true,
+      totalFaculty: faculty.length,
+      averageApiScore: results.length > 0 ? Number((results.reduce((acc, f) => acc + f.totalApiScore, 0) / results.length).toFixed(1)) : 0,
+      facultyScores: results
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'PBAS calculator failed: ' + err.message });
+  }
+});
+
+// 3. Evidence Vault Health & Verification Scanner (DVV Readiness)
+app.get('/api/evidence/health', async (req, res) => {
+  try {
+    const collections = ['faculty', 'infrastructure', 'research', 'events', 'tasks'];
+    const summary = {};
+    let totalItems = 0;
+    let validItems = 0;
+    let missingItems = 0;
+    const missingRecords = [];
+
+    for (const c of collections) {
+      const records = await db.getCollection(c) || [];
+      const linkKey = c === 'tasks' ? 'submission_url' : 'evidence_url';
+      let cValid = 0;
+      let cMissing = 0;
+
+      records.forEach(r => {
+        const url = (r[linkKey] || '').trim();
+        const hasValidUrl = url.startsWith('http://') || url.startsWith('https://');
+        if (hasValidUrl) {
+          cValid++;
+        } else {
+          cMissing++;
+          missingRecords.push({
+            collection: c,
+            id: r.id,
+            title: r.name || r.title || `Record #${r.id}`,
+            currentUrl: url
+          });
+        }
+      });
+
+      totalItems += records.length;
+      validItems += cValid;
+      missingItems += cMissing;
+
+      summary[c] = {
+        total: records.length,
+        verified: cValid,
+        missing: cMissing,
+        healthPct: records.length > 0 ? Number(((cValid / records.length) * 100).toFixed(1)) : 100
+      };
+    }
+
+    const overallHealthPct = totalItems > 0 ? Number(((validItems / totalItems) * 100).toFixed(1)) : 100;
+
+    res.json({
+      success: true,
+      overallHealthPct,
+      dvvStatus: overallHealthPct >= 90 ? 'DVV Audit Ready (High Compliance)' : (overallHealthPct >= 70 ? 'Moderate (Remediation Needed)' : 'Critical Evidence Gaps'),
+      totalItems,
+      validItems,
+      missingItems,
+      summary,
+      missingRecords: missingRecords.slice(0, 30)
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Evidence health scan failed: ' + err.message });
+  }
+});
+
+// 4. Batch Evidence Link Attacher
+app.post('/api/evidence/batch-update', async (req, res) => {
+  try {
+    const { actor, role } = extractActor(req);
+    const { updates } = req.body;
+    if (!Array.isArray(updates) || updates.length === 0) {
+      return res.status(400).json({ error: 'Array of updates required' });
+    }
+
+    let updatedCount = 0;
+    for (const item of updates) {
+      const { collection, id, evidence_url } = item;
+      if (collection && id && evidence_url) {
+        const linkKey = collection === 'tasks' ? 'submission_url' : 'evidence_url';
+        await db.updateRecord(collection, id, { [linkKey]: evidence_url.trim() });
+        updatedCount++;
+      }
+    }
+
+    await db.logAudit('BATCH_EVIDENCE_UPDATE', 'evidence_vault', `${updatedCount} records`, actor, role, `Batch updated evidence links for ${updatedCount} records.`);
+    res.json({ success: true, updatedCount });
+  } catch (err) {
+    res.status(500).json({ error: 'Batch evidence update failed: ' + err.message });
+  }
+});
+
+// 5. One-Click Backup Restore
+app.post('/api/backup/restore', async (req, res) => {
+  try {
+    const { actor, role } = extractActor(req);
+    const payload = req.body;
+    if (!payload || typeof payload !== 'object') {
+      return res.status(400).json({ error: 'Invalid backup JSON payload' });
+    }
+
+    await db.syncAllState(payload);
+    await db.logAudit('BACKUP_RESTORE', 'system', 'all', actor, role, 'Full system restore executed successfully.');
+    res.json({ success: true, message: 'Portal state restored successfully from backup.' });
+  } catch (err) {
+    res.status(500).json({ error: 'Backup restore failed: ' + err.message });
+  }
+});
+
 // --- Dataset Reset & Sample Load ---
 app.post('/api/dataset/reset-clean', async (req, res) => {
   try {
@@ -1139,7 +1518,7 @@ const PORT = process.env.PORT || 3000;
 initDatabase().then(() => {
   app.listen(PORT, () => {
     console.log(`\n======================================================`);
-    console.log(`  VERITA — Institutional Accreditation SaaS Platform`);
+    console.log(`  QUALEX 360 — Institutional Quality & Accreditation Intelligence Platform`);
     console.log(`  Server running on http://localhost:${PORT}`);
     console.log(`  Database Engine: ${db.isPostgres() ? 'PostgreSQL' : 'Embedded Zero-Config JSON'}`);
     console.log(`======================================================\n`);

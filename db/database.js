@@ -418,9 +418,9 @@ const DEFAULT_STORE = {
       start_date: '2025-02-14',
       end_date: '2025-02-15',
       participants_count: 180,
-      venue: 'Audi Block, Kengeri Campus',
+      venue: 'Main Academic Auditorium, Main Campus',
       status: 'Approved by IQAC',
-      evidence_url: 'https://christuniversity.in/events/ncssmi-2025',
+      evidence_url: 'https://drive.google.com/drive/my-drive',
       created_at: new Date().toISOString()
     },
     {

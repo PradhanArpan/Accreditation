@@ -1,6 +1,6 @@
 // ============================================================================
-// VERITA — Institutional Accreditation SaaS Platform
-// Hierarchical Quality Assurance & Continuous Compliance Engine
+// QUALEX 360 — Institutional Accreditation & Quality Intelligence Platform
+// Autonomous Multi-Tier Compliance, Evidence Vault & Continuous Improvement Engine
 // University > School > Department Multi-Tier Architecture
 // Left Panel Navigation with Google Identity & Live Google Drive/Sheets Sync
 // ============================================================================
@@ -12,6 +12,15 @@ const CONFIG = {
       items: [
         { key: 'hierarchy', label: 'University Hierarchy', icon: '🏛️', desc: 'Uni › School › Dept Folders' },
         { key: 'drivesync', label: 'Google Drive & Sheets Hub', icon: '📁', desc: 'Live Sheets & Cloud Sync' }
+      ]
+    },
+    {
+      title: 'Quality Intelligence & Benchmarks',
+      items: [
+        { key: 'audit_gap', label: 'Smart Gap Auditor & CGPA', icon: '🎯', desc: 'Predicted CGPA & Actionable Gaps' },
+        { key: 'pbas', label: 'Faculty PBAS / CAS Scores', icon: '🧮', desc: 'UGC API Score Calculator' },
+        { key: 'evidence_health', label: 'Evidence Health & DVV', icon: '🛡️', desc: 'Link Verification & Gaps' },
+        { key: 'crosswalk', label: 'Agency Cross-Walk Matrix', icon: '🔄', desc: 'NAAC · NBA · NIRF Mapping' }
       ]
     },
     {
@@ -46,9 +55,10 @@ const CONFIG = {
       ]
     },
     {
-      title: 'Reports & Audit',
+      title: 'Reports & Data Exchange',
       items: [
         { key: 'reports', label: 'Official Dossier', icon: '📑', desc: 'Formal Printable Reports' },
+        { key: 'backup_hub', label: 'Backup & Data Exchange', icon: '💾', desc: 'Export / Import & Snapshots' },
         { key: 'audit', label: 'Audit Trail', icon: '📜', desc: 'Activity Audit Log' }
       ]
     }
@@ -182,6 +192,11 @@ const state = {
   statusFilter: 'ALL',
   accreditationTab: 'naac',
   sidebarOpen: false,
+  smartAudit: null,
+  pbasData: null,
+  selectedPbasFacultyId: null,
+  evidenceHealth: null,
+  crosswalkAgency: 'all',
   institution: {
     university_name: 'Apex University',
     campus: 'Main Academic Campus',
@@ -216,7 +231,7 @@ async function api(path, opts = {}) {
     'Content-Type': 'application/json',
     'x-user-role': state.currentUser ? state.currentUser.role : 'guest',
     'x-user-name': state.currentUser ? state.currentUser.name : 'Guest User',
-    'x-user-email': state.currentUser ? state.currentUser.email : 'guest@verita.edu',
+    'x-user-email': state.currentUser ? state.currentUser.email : 'guest@qualex360.edu',
     ...(opts.headers || {})
   };
 
@@ -242,7 +257,7 @@ function saveLocalCache() {
       ...state.data,
       timestamp: new Date().toISOString()
     };
-    localStorage.setItem('verita_dept_cache', JSON.stringify(bundle));
+    localStorage.setItem('qualex_dept_cache', JSON.stringify(bundle));
   } catch (e) {
     console.warn('Local cache save warning:', e.message);
   }
@@ -250,7 +265,7 @@ function saveLocalCache() {
 
 async function checkAndRestoreClientCache() {
   try {
-    const raw = localStorage.getItem('verita_dept_cache');
+    const raw = localStorage.getItem('qualex_dept_cache') || localStorage.getItem('verita_dept_cache');
     if (!raw) return;
     const cached = JSON.parse(raw);
     // If backend was freshly rebooted and has empty tables while cache has records
@@ -267,7 +282,7 @@ async function checkAndRestoreClientCache() {
 async function loadAllData() {
   try {
     // Restore session user if present
-    const savedUser = localStorage.getItem('verita_user_session');
+    const savedUser = localStorage.getItem('qualex_user_session') || localStorage.getItem('verita_user_session');
     if (savedUser) {
       try {
         const parsed = JSON.parse(savedUser);
@@ -373,6 +388,7 @@ function toggleSidebar() {
 // ============================================================================
 function logoutUser() {
   state.currentUser = null;
+  localStorage.removeItem('qualex_user_session');
   localStorage.removeItem('verita_user_session');
   showToast('You have signed out. Please sign in with your role account to access Drive & Sheets.', 'info');
   render();
@@ -390,7 +406,7 @@ function renderSidebar() {
     <div class="sidebar-header">
       <div class="sidebar-brand-crest">${esc(initials)}</div>
       <div class="sidebar-brand-info">
-        <h2>VERITA</h2>
+        <h2>QUALEX 360</h2>
         <div class="inst-tag" title="${esc(inst.university_name || 'Apex University')}">${esc(inst.university_name || 'Apex University')}</div>
       </div>
     </div>
@@ -679,6 +695,7 @@ async function executeCustomGoogleLogin() {
       state.currentUser = res.user;
       if (res.institution) state.institution = res.institution;
       if (res.hierarchy) state.hierarchy = res.hierarchy;
+      localStorage.setItem('qualex_user_session', JSON.stringify(state.currentUser));
       localStorage.setItem('verita_user_session', JSON.stringify(state.currentUser));
       saveLocalCache();
       showToast(`Signed in as ${res.user.name} (${res.user.role}) for ${state.institution.department_name}`, 'success');
@@ -2680,6 +2697,777 @@ function renderReports() {
 }
 
 // ============================================================================
+// QUALEX 360 EXTENDED INTELLIGENCE MODULES
+// ============================================================================
+
+// --- 1. Smart Gap Auditor & CGPA Predictor ---
+async function fetchSmartAuditData() {
+  try {
+    const res = await api('/api/audit/gap-analysis');
+    state.smartAudit = res;
+    return res;
+  } catch (err) {
+    console.error('Failed fetching gap audit:', err);
+    return null;
+  }
+}
+
+function renderSmartGapAuditor() {
+  const audit = state.smartAudit;
+  if (!audit) {
+    setTimeout(async () => {
+      await fetchSmartAuditData();
+      const mainEl = document.getElementById('mainContent');
+      if (mainEl && state.activeTab === 'audit_gap') {
+        mainEl.innerHTML = renderSmartGapAuditor();
+      }
+    }, 50);
+    return `
+      <div class="card" style="text-align: center; padding: 60px 20px;">
+        <div style="font-size: 2.2rem; margin-bottom: 12px;">🎯</div>
+        <h3 style="font-family: var(--font-serif); font-size: 1.25rem;">Computing Smart Quality Audit & Predicting NAAC CGPA...</h3>
+        <p style="font-size: 0.84rem; color: var(--ink-soft); margin-top: 6px;">
+          Auditing department data streams across 7 NAAC criteria and NBA Washington Accord benchmarks.
+        </p>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="audit-hero">
+      <div class="audit-hero-info">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+          <span style="background: rgba(255,255,255,0.2); padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em;">
+            AI ACCREDITATION AUDITOR
+          </span>
+          <span style="opacity: 0.85; font-size: 0.78rem;">Evaluated against NAAC RAF & NBA Manuals</span>
+        </div>
+        <h2>🎯 Smart Gap Auditor & Institutional Readiness</h2>
+        <div class="audit-hero-subtitle">
+          Real-time benchmark evaluation: Continuous automated assessment of quantitative metrics (QnM), student-faculty ratio, publication index, doctoral cadre, and OBE attainment.
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap;">
+          <button class="btn" style="background: #FFF; color: var(--brand-primary); font-weight: 700;" onclick="refreshSmartGapAudit()">
+            🔄 Re-Evaluate Live Data
+          </button>
+          <button class="btn" style="background: rgba(255,255,255,0.15); color: #FFF; border: 1px solid rgba(255,255,255,0.4);" onclick="selectNavTab('reports')">
+            📑 Print Official Dossier
+          </button>
+        </div>
+      </div>
+      <div class="audit-cgpa-badge">
+        <div class="audit-cgpa-scale">PREDICTED NAAC CGPA</div>
+        <div class="audit-cgpa-score">${audit.cgpa}</div>
+        <div class="audit-cgpa-scale">OUT OF 4.00</div>
+        <div class="audit-grade-pill">${esc(audit.projectedGrade)}</div>
+        <div style="font-size: 0.72rem; opacity: 0.85; margin-top: 6px;">
+          Overall Readiness: <strong>${audit.readinessPct}%</strong> (${audit.totalWeightedScore}/1000)
+        </div>
+      </div>
+    </div>
+
+    <!-- Recommendations / Actionable Gaps Banner -->
+    <div class="recommendations-panel">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <h3 style="margin: 0; font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
+          <span>🚨 Actionable Remediation Queue</span>
+          <span class="badge" style="background: #B93826; color: #FFF;">${audit.recommendations.length} Detected</span>
+        </h3>
+        <span style="font-size: 0.76rem; color: var(--ink-soft);">Prioritized by NAAC peer review weightage</span>
+      </div>
+
+      ${audit.recommendations.length === 0 ? `
+        <div style="padding: 24px; text-align: center; color: var(--ink-soft);">
+          ✨ <strong>Exceptional Standing!</strong> No critical gaps identified in current data streams.
+        </div>
+      ` : `
+        <div class="rec-list">
+          ${audit.recommendations.map(r => `
+            <div class="rec-item">
+              <span class="rec-badge ${r.severity}">${r.severity}</span>
+              <div style="flex: 1;">
+                <div style="font-weight: 700; font-size: 0.85rem; color: var(--ink); margin-bottom: 2px;">
+                  ${esc(r.criterion)}
+                </div>
+                <div style="font-size: 0.8rem; color: var(--ink-soft); line-height: 1.45;">
+                  ${esc(r.text)}
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `}
+    </div>
+
+    <!-- NAAC 7 Criteria Scorecards Grid -->
+    <h3 style="font-family: var(--font-serif); margin-bottom: 14px; font-size: 1.15rem; color: var(--ink);">
+      🏛️ NAAC Revised Accreditation Framework (RAF) Criteria Scores
+    </h3>
+    <div class="criteria-grid">
+      ${audit.criteria.map(c => {
+        const pct = Math.min(100, Math.round((c.score / c.weight) * 100));
+        let fillColor = '#1E6B3F';
+        if (pct < 70) fillColor = '#B93826';
+        else if (pct < 85) fillColor = '#9C6F12';
+
+        return `
+          <div class="criterion-card">
+            <div class="criterion-header">
+              <span class="criterion-title">${c.id}: ${esc(c.title)}</span>
+              <span class="pill ${c.status === 'Optimized' ? 'approved' : (c.status === 'Compliant' ? 'submitted' : 'sentback')}">
+                ${c.status}
+              </span>
+            </div>
+            <div class="criterion-progress-bar">
+              <div class="criterion-progress-fill" style="width: ${pct}%; background: ${fillColor};"></div>
+            </div>
+            <div class="criterion-score-row">
+              <span>Achieved: <strong>${c.score}</strong> / ${c.weight} pts</span>
+              <span><strong>${pct}%</strong> Met</span>
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+
+    <!-- NBA Washington Accord Metrics Panel -->
+    <div class="card" style="margin-top: 10px;">
+      <div class="card-header">
+        <div>
+          <h3 class="card-title">🎯 NBA Washington Accord (Tier-I) Key Performance Indicators</h3>
+          <div class="card-subtitle">Outcome-Based Education (OBE) compliance and Program Assessment metrics</div>
+        </div>
+        <button class="btn" onclick="selectNavTab('programs')">Manage Programs & COs</button>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; padding: 10px 0;">
+        <div style="background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 14px; text-align: center;">
+          <div style="font-size: 0.72rem; color: var(--ink-muted); text-transform: uppercase;">Average CO Attainment</div>
+          <div style="font-size: 1.5rem; font-weight: 700; color: #1E6B3F; margin-top: 4px;">${audit.nbaMetrics.coAttainment}</div>
+          <div style="font-size: 0.7rem; color: var(--ink-soft); margin-top: 2px;">Target: ≥ 80% (Washington Accord)</div>
+        </div>
+        <div style="background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 14px; text-align: center;">
+          <div style="font-size: 0.72rem; color: var(--ink-muted); text-transform: uppercase;">Student-to-Faculty Ratio</div>
+          <div style="font-size: 1.5rem; font-weight: 700; color: var(--brand-primary); margin-top: 4px;">${audit.nbaMetrics.sfr}</div>
+          <div style="font-size: 0.7rem; color: var(--ink-soft); margin-top: 2px;">AICTE/NBA Cadre Norm (15:1)</div>
+        </div>
+        <div style="background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 14px; text-align: center;">
+          <div style="font-size: 0.72rem; color: var(--ink-muted); text-transform: uppercase;">Faculty with Ph.D.</div>
+          <div style="font-size: 1.5rem; font-weight: 700; color: #9C6F12; margin-top: 4px;">${audit.nbaMetrics.phdFaculty}</div>
+          <div style="font-size: 0.7rem; color: var(--ink-soft); margin-top: 2px;">Tier-I Standard: ≥ 60%</div>
+        </div>
+        <div style="background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 14px; text-align: center;">
+          <div style="font-size: 0.72rem; color: var(--ink-muted); text-transform: uppercase;">Cadre Ratio Compliance</div>
+          <div style="font-size: 1.3rem; font-weight: 700; color: #1E6B3F; margin-top: 8px;">1 : 2 : 6</div>
+          <div style="font-size: 0.7rem; color: var(--ink-soft); margin-top: 2px;">Prof : Assoc Prof : Asst Prof</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function refreshSmartGapAudit() {
+  state.smartAudit = null;
+  await fetchSmartAuditData();
+  const mainEl = document.getElementById('mainContent');
+  if (mainEl) mainEl.innerHTML = renderSmartGapAuditor();
+  showToast('Live benchmark audit refreshed with latest department metrics.', 'success');
+}
+
+// --- 2. Faculty PBAS / CAS API Score Calculator ---
+async function fetchPbasData() {
+  try {
+    const res = await api('/api/pbas/calculator');
+    state.pbasData = res;
+    return res;
+  } catch (err) {
+    console.error('Failed fetching PBAS data:', err);
+    return null;
+  }
+}
+
+function renderPbasCalculator() {
+  const pbas = state.pbasData;
+  if (!pbas) {
+    setTimeout(async () => {
+      await fetchPbasData();
+      const mainEl = document.getElementById('mainContent');
+      if (mainEl && state.activeTab === 'pbas') {
+        mainEl.innerHTML = renderPbasCalculator();
+      }
+    }, 50);
+    return `
+      <div class="card" style="text-align: center; padding: 60px 20px;">
+        <div style="font-size: 2.2rem; margin-bottom: 12px;">🧮</div>
+        <h3 style="font-family: var(--font-serif); font-size: 1.25rem;">Calculating Faculty PBAS & UGC CAS API Points...</h3>
+        <p style="font-size: 0.84rem; color: var(--ink-soft); margin-top: 6px;">
+          Aggregating teaching workload, IQAC administration, Scopus publications, patents, and sponsored grants.
+        </p>
+      </div>
+    `;
+  }
+
+  const selectedFac = state.selectedPbasFacultyId
+    ? pbas.facultyScores.find(f => Number(f.id) === Number(state.selectedPbasFacultyId))
+    : pbas.facultyScores[0];
+
+  return `
+    <div class="pbas-summary-banner">
+      <div>
+        <div style="font-size: 0.75rem; color: var(--ink-muted); text-transform: uppercase; font-weight: 600;">
+          UGC 7th CPC Framework · Performance Based Appraisal System (PBAS)
+        </div>
+        <h2 style="margin: 4px 0; font-size: 1.35rem; font-family: var(--font-serif); color: var(--ink);">
+          🧮 Faculty Career Advancement Scheme (CAS) Scorecard
+        </h2>
+        <div style="font-size: 0.8rem; color: var(--ink-soft);">
+          Department Average API: <strong>${pbas.averageApiScore} pts</strong> across ${pbas.totalFaculty} active faculty members.
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn" onclick="refreshPbasCalculator()">🔄 Re-Calculate</button>
+        <button class="btn primary" onclick="window.print()">🖨️ Export Appraisal</button>
+      </div>
+    </div>
+
+    <!-- Individual Faculty Inspector & Filter -->
+    <div class="card" style="margin-bottom: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+        <h3 style="font-size: 1rem; margin: 0;">👤 Select Faculty Member to Inspect Scorecard:</h3>
+        <select style="max-width: 340px; padding: 6px 12px; font-weight: 600;" onchange="state.selectedPbasFacultyId = this.value; render();">
+          ${pbas.facultyScores.map(f => `
+            <option value="${f.id}" ${selectedFac && selectedFac.id === f.id ? 'selected' : ''}>
+              ${esc(f.name)} (${esc(f.designation)}) — ${f.totalApiScore} pts
+            </option>
+          `).join('')}
+        </select>
+      </div>
+
+      ${selectedFac ? `
+        <div style="background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 18px 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px; margin-bottom: 16px;">
+            <div>
+              <h3 style="margin: 0; font-size: 1.2rem; color: var(--brand-primary);">${esc(selectedFac.name)}</h3>
+              <div style="font-size: 0.82rem; color: var(--ink-soft); margin-top: 2px;">
+                ${esc(selectedFac.designation)} · ${esc(selectedFac.qualification)} · ${selectedFac.experience_years} Years Experience
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 0.72rem; color: var(--ink-muted); text-transform: uppercase;">Total UGC API Score</div>
+              <div style="font-family: var(--font-mono); font-size: 2rem; font-weight: 700; color: var(--brand-primary); line-height: 1.1;">
+                ${selectedFac.totalApiScore} <span style="font-size: 0.9rem; font-weight: 400; color: var(--ink-soft);">pts</span>
+              </div>
+              <div class="pbas-badge-eligibility" style="margin-top: 4px;">
+                ✨ ${esc(selectedFac.promotionEligibility)}
+              </div>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 14px;">
+            <div style="background: var(--paper-card); border: 1px solid var(--line); border-radius: 6px; padding: 12px;">
+              <div style="font-size: 0.74rem; color: var(--ink-muted); font-weight: 600;">Category I: Teaching & Evaluation</div>
+              <div style="font-size: 1.35rem; font-weight: 700; color: var(--brand-primary); margin: 4px 0;">
+                ${selectedFac.cat1Teaching} <span style="font-size: 0.75rem; color: var(--ink-soft);">/ 80 max</span>
+              </div>
+              <div style="font-size: 0.72rem; color: var(--ink-soft);">Curriculum, lectures, labs & examinations</div>
+            </div>
+
+            <div style="background: var(--paper-card); border: 1px solid var(--line); border-radius: 6px; padding: 12px;">
+              <div style="font-size: 0.74rem; color: var(--ink-muted); font-weight: 600;">Category II: Governance & IQAC</div>
+              <div style="font-size: 1.35rem; font-weight: 700; color: var(--brand-primary); margin: 4px 0;">
+                ${selectedFac.cat2Governance} <span style="font-size: 0.75rem; color: var(--ink-soft);">/ 50 max</span>
+              </div>
+              <div style="font-size: 0.72rem; color: var(--ink-soft);">Committee roles, FDPs & accreditation duties</div>
+            </div>
+
+            <div style="background: var(--paper-card); border: 1px solid var(--line); border-radius: 6px; padding: 12px;">
+              <div style="font-size: 0.74rem; color: var(--ink-muted); font-weight: 600;">Category III: Research & Publications</div>
+              <div style="font-size: 1.35rem; font-weight: 700; color: #1E6B3F; margin: 4px 0;">
+                ${selectedFac.cat3Research} <span style="font-size: 0.75rem; color: var(--ink-soft);">pts (Uncapped)</span>
+              </div>
+              <div style="font-size: 0.72rem; color: var(--ink-soft);">
+                ${selectedFac.papersCount} papers · ${selectedFac.patentsCount} patents · ${formatInr(selectedFac.grantsSum)} grants
+              </div>
+            </div>
+          </div>
+        </div>
+      ` : ''}
+    </div>
+
+    <!-- Complete Department Faculty PBAS Roster -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h3 class="card-title">📜 Department Faculty PBAS Ranking & CAS Promotion Roster</h3>
+          <div class="card-subtitle">Annual academic performance audit according to UGC Table 1 & Table 2 norms</div>
+        </div>
+        <button class="btn" onclick="selectNavTab('faculty')">👥 Manage Faculty Directory</button>
+      </div>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Faculty Member</th>
+            <th>Designation</th>
+            <th>Cat I (Teach)</th>
+            <th>Cat II (Gov)</th>
+            <th>Cat III (Research)</th>
+            <th>Total API</th>
+            <th>CAS Promotion Standing</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${[...pbas.facultyScores].sort((a,b)=>b.totalApiScore - a.totalApiScore).map((f, idx) => `
+            <tr style="cursor: pointer;" onclick="state.selectedPbasFacultyId = ${f.id}; render();">
+              <td style="font-family: var(--font-mono); font-weight: 700; color: var(--brand-primary); width: 45px;">#${idx + 1}</td>
+              <td><strong>${esc(f.name)}</strong></td>
+              <td style="font-size: 0.8rem; color: var(--ink-soft);">${esc(f.designation)}</td>
+              <td style="font-family: var(--font-mono); font-size: 0.8rem;">${f.cat1Teaching}</td>
+              <td style="font-family: var(--font-mono); font-size: 0.8rem;">${f.cat2Governance}</td>
+              <td style="font-family: var(--font-mono); font-size: 0.8rem; color: #1E6B3F; font-weight: 700;">${f.cat3Research}</td>
+              <td style="font-family: var(--font-mono); font-size: 0.95rem; font-weight: 700; color: var(--brand-primary);">${f.totalApiScore}</td>
+              <td>
+                <span class="pill ${f.promotionEligibility.includes('Eligible') ? 'approved' : 'submitted'}" style="font-size: 0.72rem;">
+                  ${esc(f.promotionEligibility)}
+                </span>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+async function refreshPbasCalculator() {
+  state.pbasData = null;
+  await fetchPbasData();
+  const mainEl = document.getElementById('mainContent');
+  if (mainEl) mainEl.innerHTML = renderPbasCalculator();
+  showToast('Faculty PBAS scores refreshed.', 'success');
+}
+
+// --- 3. Evidence Vault Health & DVV Validator ---
+async function fetchEvidenceHealth() {
+  try {
+    const res = await api('/api/evidence/health');
+    state.evidenceHealth = res;
+    return res;
+  } catch (err) {
+    console.error('Failed fetching evidence health:', err);
+    return null;
+  }
+}
+
+function renderEvidenceHealth() {
+  const ev = state.evidenceHealth;
+  if (!ev) {
+    setTimeout(async () => {
+      await fetchEvidenceHealth();
+      const mainEl = document.getElementById('mainContent');
+      if (mainEl && state.activeTab === 'evidence_health') {
+        mainEl.innerHTML = renderEvidenceHealth();
+      }
+    }, 50);
+    return `
+      <div class="card" style="text-align: center; padding: 60px 20px;">
+        <div style="font-size: 2.2rem; margin-bottom: 12px;">🛡️</div>
+        <h3 style="font-family: var(--font-serif); font-size: 1.25rem;">Auditing Evidence Vault & DVV Verification URLs...</h3>
+        <p style="font-size: 0.84rem; color: var(--ink-soft); margin-top: 6px;">
+          Scanning Google Drive folder links, DOI references, and uploaded artifacts across all department collections.
+        </p>
+      </div>
+    `;
+  }
+
+  const instDrive = state.institution.drive_folder_url || 'https://drive.google.com/drive/my-drive';
+  const pctClass = ev.overallHealthPct >= 90 ? 'good' : (ev.overallHealthPct >= 70 ? 'warn' : 'poor');
+
+  return `
+    <div class="evidence-health-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div>
+          <div style="font-size: 0.75rem; color: var(--ink-muted); text-transform: uppercase; font-weight: 600;">
+            Data Validation & Verification (DVV) Integrity Gateway
+          </div>
+          <h2 style="margin: 4px 0; font-size: 1.35rem; font-family: var(--font-serif); color: var(--ink);">
+            🛡️ Evidence Vault Health & Verification Scanner
+          </h2>
+          <div style="font-size: 0.8rem; color: var(--ink-soft);">
+            Audit Status: <strong>${esc(ev.dvvStatus)}</strong>
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn" onclick="refreshEvidenceHealth()">🔄 Re-Scan Evidence</button>
+          <button class="btn primary" onclick="batchFixMissingWithDrive()">📂 Auto-Link to Personal Drive</button>
+        </div>
+      </div>
+
+      <div class="health-meter-container">
+        <div class="health-circle-stat">
+          <div class="health-big-pct ${pctClass}">${ev.overallHealthPct}%</div>
+          <div style="font-size: 0.78rem; font-weight: 700; color: var(--ink); margin-top: 6px;">Evidence Coverage</div>
+          <div style="font-size: 0.72rem; color: var(--ink-soft); margin-top: 2px;">
+            ${ev.validItems} of ${ev.totalItems} records verified
+          </div>
+        </div>
+
+        <div class="evidence-domain-list">
+          ${Object.keys(ev.summary).map(key => {
+            const item = ev.summary[key];
+            const label = CONFIG.collections[key]?.label || (key === 'tasks' ? 'Faculty Tasks' : key);
+            return `
+              <div class="evidence-domain-row">
+                <span style="font-weight: 600; color: var(--ink);">${esc(label)}</span>
+                <div style="background: var(--line-light); height: 8px; border-radius: 4px; overflow: hidden;">
+                  <div style="background: ${item.healthPct >= 90 ? '#1E6B3F' : (item.healthPct >= 70 ? '#9C6F12' : '#B93826')}; width: ${item.healthPct}%; height: 100%;"></div>
+                </div>
+                <span style="font-family: var(--font-mono); font-size: 0.75rem; text-align: right; color: var(--ink-soft);">
+                  ${item.verified}/${item.total} (${item.healthPct}%)
+                </span>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- Missing Evidence Records Table -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h3 class="card-title">⚠️ Records Requiring Evidence / Drive Links (${ev.missingRecords.length})</h3>
+          <div class="card-subtitle">
+            Records without valid proof links are disqualified during NAAC DVV and NBA evaluation visits. Attach links directly below.
+          </div>
+        </div>
+        <button class="btn" onclick="window.open('${esc(instDrive)}', '_blank')">📂 Open Evidence Drive</button>
+      </div>
+
+      ${ev.missingRecords.length === 0 ? `
+        <div style="text-align: center; padding: 40px; color: var(--ink-soft);">
+          ✨ <strong>100% Evidence Coverage!</strong> All records have valid Google Drive or publication links attached.
+        </div>
+      ` : `
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Domain</th>
+              <th>Record Description</th>
+              <th>Attach Evidence URL</th>
+              <th style="text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${ev.missingRecords.map(rec => {
+              const inputId = `ev_link_${rec.collection}_${rec.id}`;
+              return `
+                <tr>
+                  <td><span class="pill submitted">${CONFIG.collections[rec.collection]?.singular || rec.collection}</span></td>
+                  <td><strong>${esc(rec.title)}</strong></td>
+                  <td>
+                    <input type="url" id="${inputId}" value="${esc(rec.currentUrl)}" placeholder="https://drive.google.com/..." style="width: 100%; padding: 4px 8px; font-size: 0.78rem;">
+                  </td>
+                  <td style="text-align: right; white-space: nowrap;">
+                    <button class="btn primary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="saveEvidenceLinkInline('${rec.collection}', ${rec.id})">
+                      💾 Save Link
+                    </button>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `}
+    </div>
+  `;
+}
+
+async function refreshEvidenceHealth() {
+  state.evidenceHealth = null;
+  await fetchEvidenceHealth();
+  const mainEl = document.getElementById('mainContent');
+  if (mainEl) mainEl.innerHTML = renderEvidenceHealth();
+  showToast('Evidence Health scan complete.', 'success');
+}
+
+async function saveEvidenceLinkInline(collection, id) {
+  const inputEl = document.getElementById(`ev_link_${collection}_${id}`);
+  if (!inputEl) return;
+  const url = inputEl.value.trim();
+  if (!url) {
+    showToast('Please enter a valid URL before saving', 'error');
+    return;
+  }
+  try {
+    const linkKey = collection === 'tasks' ? 'submission_url' : 'evidence_url';
+    await api(`/api/${collection}/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ [linkKey]: url })
+    });
+    showToast('Evidence link attached successfully!', 'success');
+    await loadAllData();
+    refreshEvidenceHealth();
+  } catch (err) {
+    showToast('Failed to save link: ' + err.message, 'error');
+  }
+}
+
+async function batchFixMissingWithDrive() {
+  const ev = state.evidenceHealth;
+  if (!ev || !ev.missingRecords || ev.missingRecords.length === 0) {
+    showToast('No missing evidence links detected.', 'info');
+    return;
+  }
+  const instDrive = state.institution.drive_folder_url || 'https://drive.google.com/drive/my-drive';
+  if (!confirm(`Link ${ev.missingRecords.length} records without evidence to your personal Drive folder (${instDrive}) as an interim baseline?`)) return;
+
+  const updates = ev.missingRecords.map(r => ({
+    collection: r.collection,
+    id: r.id,
+    evidence_url: instDrive
+  }));
+
+  try {
+    await api('/api/evidence/batch-update', {
+      method: 'POST',
+      body: JSON.stringify({ updates })
+    });
+    showToast(`Successfully linked ${updates.length} records to your Evidence Drive!`, 'success');
+    await loadAllData();
+    refreshEvidenceHealth();
+  } catch (err) {
+    showToast('Batch link failed: ' + err.message, 'error');
+  }
+}
+
+// --- 4. Multi-Agency Compliance Cross-Walk Matrix ---
+function renderCrossWalkMatrix() {
+  const rows = [
+    {
+      entity: '👨‍🏫 Faculty Directory',
+      tabKey: 'faculty',
+      desc: 'Regular, adjunct, and doctoral faculty roster with designations, qualifications, and specializations.',
+      naac: 'Criterion 2.1 (Student Enrolment) · 2.2 (Catering to Diversity) · 2.4 (Teacher Profile & Quality)',
+      nba: 'Criterion 5 (Faculty Information & Contributions) · Cadre Ratio (1:2:6) · SFR (15:1) · Ph.D. Retention',
+      nirf: 'TLR: Teaching, Learning & Resources (Faculty-Student Ratio FSR, Faculty with Ph.D. FQE)',
+      aicte: 'Approval Process Handbook (APH) Mandatory Disclosure · Teacher-to-Student Ratio · Cadre Norms'
+    },
+    {
+      entity: '🎓 Student Cohort Roster',
+      tabKey: 'students',
+      desc: 'Enrolled students, category diversity (SC/ST/OBC/EWS), gender ratio, domicile state/international, PwD, placement & higher studies.',
+      naac: 'Extended Profile (1.1 Number of students, 1.2 Outgoing students) · Criterion 5 (Student Support & Progression)',
+      nba: 'Criterion 4 (Students’ Performance) · Success rate without backlogs · Academic performance in final year',
+      nirf: 'Outreach & Inclusivity (OI): Regional Diversity (RD), Women Diversity (WD), Economically & Socially Challenged (ES)',
+      aicte: 'Approved Intake vs Actual Enrolment · Scholarship and Fee Waiver Statistics'
+    },
+    {
+      entity: '🔬 Infrastructure & Labs',
+      tabKey: 'infrastructure',
+      desc: 'Laboratories, smart classrooms, ICT infrastructure, major equipment inventory, and NABL calibration certificates.',
+      naac: 'Criterion 4.1 (Physical Facilities) · 4.3 (IT Infrastructure & Bandwidth) · 4.4 (Maintenance of Campus Facilities)',
+      nba: 'Criterion 6 (Facilities & Technical Support) · Adequacy of laboratories and equipment · Modern computing facilities',
+      nirf: 'TLR: Capital & Operational Expenditure on Academic Infrastructure (Labs & Computing)',
+      aicte: 'Mandatory Disclosure: Carpet Area per Student, Lab Equipment Checklist, Wi-Fi Bandwidth'
+    },
+    {
+      entity: '📚 Research & Grants',
+      tabKey: 'research',
+      desc: 'Scopus / Web of Science journal publications, conference proceedings, sponsored research grants, consultancy projects, and filed/granted patents.',
+      naac: 'Criterion 3.1 (Resource Mobilization) · 3.2 (Innovation Ecosystem) · 3.4 (Research Publications and Awards)',
+      nba: 'Criterion 5.7 (Research & Development) · Sponsored research funding · Academic publications in indexed journals',
+      nirf: 'Research and Professional Practice (RPC): Combined Metric for Publications (PU), Citations (QP), IPR/Patents (IPR), Funding (FPHP)',
+      aicte: 'R&D Cell Compliance · Industry-Sponsored Project Allocation'
+    },
+    {
+      entity: '🎪 Events & FDPs',
+      tabKey: 'events',
+      desc: 'Faculty Development Programs (FDPs), national/international conferences, technical workshops, and guest lectures.',
+      naac: 'Criterion 6.3 (Faculty Empowerment Strategies: Professional development programs attended) · 6.5 (IQAC Quality Initiatives)',
+      nba: 'Criterion 5.8 (Faculty Development Programs / Workshops) · Faculty participation in continuing education programs',
+      nirf: 'TLR: Professional Development Index & Continuous Academic Training',
+      aicte: 'AICTE-ATAL FDP Participation Norms · Annual Institutional Compliance Return'
+    },
+    {
+      entity: '🎯 NBA Academic Programs (OBE)',
+      tabKey: 'programs',
+      desc: 'UG/PG program details, Program Outcomes (POs), Course Outcomes (COs), and direct/indirect attainment percentages.',
+      naac: 'Criterion 1.1 (Curricular Planning and Implementation) · Criterion 2.6 (Student Performance & Learning Outcomes)',
+      nba: 'Criterion 1 (Vision, Mission & PEOs) · Criterion 2 (Program Curriculum) · Criterion 3 (Course Outcomes & Program Outcomes Attainment)',
+      nirf: 'Graduation Outcome (GO): Metric for University Examinations (GUE)',
+      aicte: 'NBA Accreditation Status of Sanctioned Programs (Tier-I / Washington Accord)'
+    }
+  ];
+
+  return `
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">🔄 Multi-Agency Compliance Cross-Walk Matrix</h2>
+          <div class="card-subtitle">
+            Universal Mapping Engine: See how a single department record satisfies NAAC, NBA, NIRF, and AICTE mandates simultaneously, eliminating 80% of duplicate data entry.
+          </div>
+        </div>
+        <button class="btn primary" onclick="selectNavTab('reports')">📑 Generate Consolidated Dossier</button>
+      </div>
+
+      <table class="crosswalk-table">
+        <thead>
+          <tr>
+            <th style="width: 220px;">Portal Data Stream</th>
+            <th>NAAC SSR Criteria (RAF)</th>
+            <th>NBA SAR (Tier-I Washington Accord)</th>
+            <th>NIRF Ranking Parameters</th>
+            <th>AICTE Mandatory Disclosure</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(r => `
+            <tr>
+              <td>
+                <strong style="color: var(--brand-primary); font-size: 0.88rem;">${r.entity}</strong>
+                <div style="font-size: 0.74rem; color: var(--ink-soft); margin: 4px 0 8px 0; line-height: 1.35;">${r.desc}</div>
+                <button class="btn" style="padding: 2px 8px; font-size: 0.72rem;" onclick="selectNavTab('${r.tabKey}')">
+                  Go to Stream ➜
+                </button>
+              </td>
+              <td><span class="crosswalk-tag naac">NAAC</span><div style="font-size: 0.76rem; color: var(--ink); line-height: 1.4;">${r.naac}</div></td>
+              <td><span class="crosswalk-tag nba">NBA</span><div style="font-size: 0.76rem; color: var(--ink); line-height: 1.4;">${r.nba}</div></td>
+              <td><span class="crosswalk-tag nirf">NIRF</span><div style="font-size: 0.76rem; color: var(--ink); line-height: 1.4;">${r.nirf}</div></td>
+              <td><span class="crosswalk-tag aicte">AICTE</span><div style="font-size: 0.76rem; color: var(--ink); line-height: 1.4;">${r.aicte}</div></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+// --- 5. Backup & Data Exchange Hub ---
+function renderBackupHub() {
+  const collections = ['faculty', 'students', 'infrastructure', 'research', 'events', 'programs', 'tasks'];
+  return `
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">💾 Backup, State Durability & Data Exchange Hub</h2>
+          <div class="card-subtitle">
+            Secure snapshot management: Download complete JSON state backups, export individual CSV spreadsheets, download official master templates, or restore previous datasets.
+          </div>
+        </div>
+        <button class="btn" onclick="loadAllData()">🔄 Refresh Data</button>
+      </div>
+
+      <div class="exchange-grid">
+        <!-- 1. Full JSON Snapshot -->
+        <div class="exchange-card">
+          <div>
+            <h3>📦 Complete JSON Snapshot Backup</h3>
+            <p>Download a single comprehensive JSON file containing your complete department records, institutional hierarchy, audit logs, and settings for safekeeping.</p>
+          </div>
+          <button class="btn primary" onclick="exportAllJsonBackup()" style="width: 100%;">
+            ⬇️ Download Full System Backup (.json)
+          </button>
+        </div>
+
+        <!-- 2. Restore JSON Backup -->
+        <div class="exchange-card">
+          <div>
+            <h3>⚡ Restore from JSON Backup</h3>
+            <p>Restore your department records, hierarchy, and profile from a previously saved JSON backup file. Ideal for cross-device migration.</p>
+          </div>
+          <label class="btn" style="width: 100%; text-align: center; cursor: pointer; display: block;">
+            📂 Select Backup File to Restore
+            <input type="file" accept=".json" onchange="handleBackupRestoreUpload(event)" style="display: none;">
+          </label>
+        </div>
+
+        <!-- 3. Master Excel Template -->
+        <div class="exchange-card">
+          <div>
+            <h3>📊 Master Multi-Sheet Excel Workbook</h3>
+            <p>Download the pre-structured Excel workbook (.xlsx) containing all 7 sheets formatted with column validation for offline data collation.</p>
+          </div>
+          <button class="btn" onclick="window.location.href='/api/templates/master'" style="width: 100%;">
+            📑 Download Master Template (.xlsx)
+          </button>
+        </div>
+
+        <!-- 4. Sample Dataset Reload -->
+        <div class="exchange-card">
+          <div>
+            <h3>🔄 Baseline Demonstration Dataset</h3>
+            <p>Reload the comprehensive demonstration dataset with pre-filled faculty, students, infrastructure, research publications, and events.</p>
+          </div>
+          <button class="btn" onclick="reloadSampleDataset()" style="width: 100%;">
+            ⚡ Populate Baseline Demo Data
+          </button>
+        </div>
+      </div>
+
+      <!-- Domain CSV Export Center -->
+      <div style="margin-top: 28px; border-top: 1px solid var(--line); padding-top: 20px;">
+        <h3 style="font-size: 1.05rem; margin-bottom: 6px;">📥 Export Individual Data Streams to CSV:</h3>
+        <p style="font-size: 0.8rem; color: var(--ink-soft); margin-bottom: 14px;">
+          Download clean, standardized CSV files ready for import into Excel, Google Sheets, or institutional ERP systems.
+        </p>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          ${collections.map(c => `
+            <button class="btn" style="padding: 6px 12px; font-size: 0.8rem;" onclick="downloadStreamCsv('${c}')">
+              📄 ${CONFIG.collections[c]?.label || c} (.csv)
+            </button>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function exportAllJsonBackup() {
+  window.location.href = '/api/export-all';
+  showToast('Downloading complete system JSON backup...', 'info');
+}
+
+async function handleBackupRestoreUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async (event) => {
+    try {
+      const parsed = JSON.parse(event.target.result);
+      if (!confirm('Are you sure you want to restore this backup? It will synchronize your department workspace with the backup contents.')) return;
+      await api('/api/backup/restore', {
+        method: 'POST',
+        body: JSON.stringify(parsed)
+      });
+      showToast('State restored successfully from backup!', 'success');
+      await loadAllData();
+      render();
+    } catch (err) {
+      showToast('Restore failed: Invalid JSON file - ' + err.message, 'error');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function downloadStreamCsv(table) {
+  window.location.href = `/api/templates/${table}?format=csv`;
+}
+
+async function reloadSampleDataset() {
+  if (!confirm('Populate the baseline sample dataset? Existing demonstration records will be refreshed.')) return;
+  try {
+    await api('/api/dataset/load-sample', { method: 'POST' });
+    showToast('Baseline accreditation dataset loaded successfully!', 'success');
+    await loadAllData();
+    render();
+  } catch (err) {
+    showToast('Failed loading sample: ' + err.message, 'error');
+  }
+}
+
+// ============================================================================
 // Record Editing Modal & Data Ingestion
 // ============================================================================
 function openEditModal(collKey, id) {
@@ -2877,8 +3665,8 @@ function renderLoginPage() {
             <div class="login-brand">
               <div class="login-crest">🏛️</div>
               <div class="login-title">
-                <h1>VERITA ACCREDITATION PORTAL</h1>
-                <div class="login-subtitle">Multi-Tier Continuous Quality & Compliance Engine</div>
+                <h1>QUALEX 360 ACCREDITATION PORTAL</h1>
+                <div class="login-subtitle">Academic Quality Assurance & Evidence Intelligence Platform</div>
               </div>
             </div>
             <button id="themeToggle" class="theme-toggle-btn" title="Toggle Theme" style="padding: 4px 10px; font-size: 0.78rem; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #FFF; border-radius: 6px; cursor: pointer;">
@@ -3003,13 +3791,18 @@ function render() {
   let bodyHtml = '';
   if (state.activeTab === 'hierarchy') bodyHtml = renderHierarchyView();
   else if (state.activeTab === 'drivesync') bodyHtml = renderDriveSyncView();
+  else if (state.activeTab === 'audit_gap') bodyHtml = renderSmartGapAuditor();
+  else if (state.activeTab === 'pbas') bodyHtml = renderPbasCalculator();
+  else if (state.activeTab === 'evidence_health') bodyHtml = renderEvidenceHealth();
+  else if (state.activeTab === 'crosswalk') bodyHtml = renderCrossWalkMatrix();
   else if (state.activeTab === 'dashboard') bodyHtml = renderDashboard();
   else if (state.activeTab === 'profile') bodyHtml = renderProfile();
   else if (state.activeTab === 'tasks') bodyHtml = renderTasksCenter();
   else if (state.activeTab === 'accreditation') bodyHtml = renderAccreditationHub();
   else if (state.activeTab === 'review') bodyHtml = renderReviewQueue();
-  else if (state.activeTab === 'audit') bodyHtml = renderAuditTrail();
   else if (state.activeTab === 'reports') bodyHtml = renderReports();
+  else if (state.activeTab === 'backup_hub') bodyHtml = renderBackupHub();
+  else if (state.activeTab === 'audit') bodyHtml = renderAuditTrail();
   else if (CONFIG.collections[state.activeTab]) bodyHtml = renderCollection(state.activeTab);
 
   root.innerHTML = `

@@ -7,10 +7,14 @@
   --line: #DFDAD0;
   --line-light: #ECE8E0;
   
-  --christ-blue: #0E355F;
-  --christ-blue-light: #184A80;
-  --christ-gold: #C29B38;
-  --christ-gold-soft: #FBF4E4;
+  --brand-primary: #0E355F;
+  --brand-primary-light: #184A80;
+  --brand-accent: #C29B38;
+  --brand-accent-soft: #FBF4E4;
+  --christ-blue: var(--brand-primary);
+  --christ-blue-light: var(--brand-primary-light);
+  --christ-gold: var(--brand-accent);
+  --christ-gold-soft: var(--brand-accent-soft);
   --accent: #265B68;
   --accent-soft: #E8F2F4;
   
@@ -43,10 +47,14 @@
   --line: #283243;
   --line-light: #1F2735;
   
-  --christ-blue: #70A2D8;
-  --christ-blue-light: #8CBCED;
-  --christ-gold: #E5C369;
-  --christ-gold-soft: #2E2819;
+  --brand-primary: #70A2D8;
+  --brand-primary-light: #8CBCED;
+  --brand-accent: #E5C369;
+  --brand-accent-soft: #2E2819;
+  --christ-blue: var(--brand-primary);
+  --christ-blue-light: var(--brand-primary-light);
+  --christ-gold: var(--brand-accent);
+  --christ-gold-soft: var(--brand-accent-soft);
   --accent: #6DB4C4;
   --accent-soft: #182C32;
   
@@ -1359,13 +1367,357 @@ table.data-table tbody tr:hover {
 }
 
 .login-drive-tip {
-  background: var(--christ-gold-soft);
-  border: 1px solid var(--christ-gold);
+  background: var(--brand-accent-soft);
+  border: 1px solid var(--brand-accent);
   border-radius: 6px;
   padding: 9px 12px;
   margin-top: 6px;
   font-size: 0.76rem;
   line-height: 1.4;
   color: var(--ink);
+}
+
+/* ==========================================================================
+   QUALEX 360 INTELLIGENCE SUITE STYLES
+   ========================================================================== */
+
+/* --- 1. Smart Gap Auditor & CGPA Predictor --- */
+.audit-hero {
+  background: linear-gradient(135deg, var(--brand-primary) 0%, #06182c 100%);
+  color: #FFFFFF;
+  border-radius: 12px;
+  padding: 24px 28px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-md);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px;
+  align-items: center;
+}
+
+.audit-hero-info h2 {
+  font-family: var(--font-serif);
+  font-size: 1.55rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: #FFFFFF;
+}
+
+.audit-hero-subtitle {
+  font-size: 0.85rem;
+  opacity: 0.88;
+  line-height: 1.45;
+  max-width: 620px;
+}
+
+.audit-cgpa-badge {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1.5px solid var(--brand-accent);
+  border-radius: 12px;
+  padding: 16px 24px;
+  text-align: center;
+  backdrop-filter: blur(8px);
+  min-width: 180px;
+}
+
+.audit-cgpa-score {
+  font-family: var(--font-mono);
+  font-size: 2.3rem;
+  font-weight: 700;
+  color: #F8D882;
+  line-height: 1;
+}
+
+.audit-cgpa-scale {
+  font-size: 0.8rem;
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+.audit-grade-pill {
+  display: inline-block;
+  background: var(--brand-accent);
+  color: #0E355F;
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-top: 8px;
+  letter-spacing: 0.03em;
+}
+
+.criteria-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.criterion-card {
+  background: var(--paper-card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 18px 20px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.criterion-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.criterion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.criterion-title {
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--ink);
+}
+
+.criterion-weight {
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+}
+
+.criterion-progress-bar {
+  background: var(--line-light);
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 10px 0;
+}
+
+.criterion-progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+
+.criterion-score-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+
+.recommendations-panel {
+  background: var(--paper-card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+}
+
+.rec-item {
+  display: flex;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line-light);
+  align-items: flex-start;
+}
+
+.rec-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.rec-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.rec-badge.critical {
+  background: #FDE8E5;
+  color: #B93826;
+  border: 1px solid #F18B7E;
+}
+
+.rec-badge.high {
+  background: #FEF3D6;
+  color: #9C6F12;
+  border: 1px solid #E5C369;
+}
+
+.rec-badge.medium {
+  background: #E8F2F4;
+  color: #265B68;
+  border: 1px solid #A2C8D0;
+}
+
+/* --- 2. UGC PBAS / CAS Calculator --- */
+.pbas-summary-banner {
+  background: var(--paper-card);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--brand-accent);
+  border-radius: 10px;
+  padding: 18px 22px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.pbas-score-box {
+  display: inline-block;
+  background: var(--brand-accent-soft);
+  border: 1px solid var(--brand-accent);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--brand-primary);
+  font-size: 0.88rem;
+}
+
+.pbas-badge-eligibility {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #DCF0E5;
+  color: #1E6B3F;
+  border: 1px solid #74D298;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.74rem;
+  font-weight: 600;
+}
+
+/* --- 3. Evidence Vault Health Scanner --- */
+.evidence-health-card {
+  background: var(--paper-card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 22px 24px;
+  margin-bottom: 24px;
+}
+
+.health-meter-container {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 28px;
+  align-items: center;
+  margin: 18px 0;
+}
+
+.health-circle-stat {
+  text-align: center;
+  padding: 20px;
+  border: 2px dashed var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+}
+
+.health-big-pct {
+  font-family: var(--font-mono);
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.health-big-pct.good { color: #1E6B3F; }
+.health-big-pct.warn { color: #9C6F12; }
+.health-big-pct.poor { color: #B93826; }
+
+.evidence-domain-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.evidence-domain-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 90px;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.82rem;
+}
+
+/* --- 4. Multi-Agency Cross-Walk Table --- */
+.crosswalk-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 14px;
+  font-size: 0.82rem;
+}
+
+.crosswalk-table th {
+  background: var(--paper);
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 2px solid var(--line);
+  color: var(--brand-primary);
+  font-weight: 700;
+}
+
+.crosswalk-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line-light);
+  vertical-align: top;
+}
+
+.crosswalk-tag {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  padding: 2px 7px;
+  border-radius: 4px;
+  margin: 2px 4px 2px 0;
+  font-weight: 600;
+}
+
+.crosswalk-tag.naac { background: #E8F2F4; color: #265B68; }
+.crosswalk-tag.nba { background: #FEF3D6; color: #9C6F12; }
+.crosswalk-tag.nirf { background: #DCF0E5; color: #1E6B3F; }
+.crosswalk-tag.aicte { background: #FDE8E5; color: #B93826; }
+
+/* --- 5. Backup & Data Exchange Cards --- */
+.exchange-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.exchange-card {
+  background: var(--paper-card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: var(--shadow-sm);
+}
+
+.exchange-card h3 {
+  font-size: 1rem;
+  margin-bottom: 6px;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.exchange-card p {
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  margin-bottom: 16px;
+  line-height: 1.45;
+  flex: 1;
 }
 
